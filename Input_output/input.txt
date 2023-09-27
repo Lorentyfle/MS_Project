@@ -1,0 +1,53 @@
+####################################
+#                                  #
+#     Format of the input file     #
+#                                  #
+####################################
+#
+# If you have multiple datas, separate each data with ;
+# AND end your line with ;
+# Name, sigma and epsilon must have the same dimension
+# Temperature (K)
+T = 87
+# Please, do not enter the density, the number of particles and
+# the size of the box at the same time.
+# (no unit)
+density = 1.38
+N_part = 200
+#bdimension = 1;3;2;
+
+# dr (allowed displacement.)
+# Is by default 0.5
+dr = 0.6
+# Time the simulation should take in MC steps
+# Is 1 by default
+simtime = 7
+# Frequence of writing. How many loops before something is
+# writen inside the output
+Freq_write = 10
+# Is this a restart?
+# 1 = Yes, 0 = No
+Restart = 0
+
+# Sigma (A)
+sigma = 3.4;2;
+# Energy in kJ/mol
+epsilon = 1;4;
+# Name
+Name = H2O;CH3O+;
+
+# epsilon and sigma should be list of same size as Name
+# DONE
+# Manque nombre de particules en fonction des espèces
+# (bdimension + density = nbr part. nbr particule + density = taille boite, maybe nbr particule + taille = densité)
+# DONE
+# nombre de pas pour MC (temps)
+# DONE
+# déplacement maximum (fraction entre 0 et 1)
+# DONE
+# Frequence d'écriture (écriture de la configuration)
+# DONE
+# Need to know if we restart
+# DONE
+# To start from output we will need to average all previous data (for V2)
+# For V2
