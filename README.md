@@ -28,8 +28,8 @@ The tests where done using MINGW64 and gfortran. If any problems arise, please, 
         - READ_ME + Planning. -DONE-
         - Compilator. -DONE-
         - Data input reader. -DONE-
-        - Position input reader. -IN PROGRESS-
-        - Position output write. -IN PROGRESS-
+        - Position input reader. -DONE-
+        - Position output write. -DONE-
     - Set up : 0%
         - Generation of system of atoms (Van der Waals spheres)
         - Molecular liquid (small molecule such as HF, H2O, CH4, ...)
