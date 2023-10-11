@@ -5,23 +5,32 @@ contains
     ! 27/09/2023 : Addition of load_input(), load_input_position()
     ! load_input_position_last(), write_input_position(), create_file()
     ! All this subroutines were coded by T.Jamin.
+    ! 11/10/2023 : Addition of the reading of proportions in load_input()
+    ! Bug correction for load_position_last() to read the last position.
+    ! Variable Label goes from string to integer. Edits necessary are added.
+    ! Addition of identity_Label that will be the tag of each individual molecules and not the type of molecules.
+    ! The program will now not stop if NdB are given in the input file.
+    ! Coded by T.Jamin.
     subroutine load_input()
-        
+        ! This subroutine will read the specific input file and put the variables into global variable 
+        ! through mod_cst.f90
         ! ***********
         ! * Modules *
         ! ***********
-        use constant, only : Temperature, Name, sigma, epsilon_
+        use constant, only : Temperature
+        use constant, only : Name, sigma, epsilon_, Proportion
         use constant, only : N_part, density, Box_dimension
         use constant, only : dr, Restart, simulation_time, Freq_write
         use constant, only : Number_of_species
         use mod_function, only : StripSpaces
+        use position, only : Label
         implicit none
         ! ***************
         ! * Declaration *
         ! ***************
         character(len=24)       :: input_fort       = './input_output/input.txt'
         character(len=1)        :: target_comment = "#"
-        character(len=12)       :: targetList(11)
+        character(len=12)       :: targetList(12)
         character(len=132)      :: line, tmp
         double precision        :: numerical_tmp
         logical                 :: good_line, done, multi_data_verif
@@ -30,7 +39,7 @@ contains
         !
         ! Initialisation of the target list
         !
-        targetList(1) = "T ="
+        targetList(1) = "T ="           ! Temperature
         targetList(2) = "Name ="        ! Have N possible entities
         targetList(3) = "sigma ="       ! Have N possible entities
         targetList(4) = "epsilon ="     ! Have N possible entities
@@ -41,6 +50,7 @@ contains
         targetList(9) = "dr ="          ! Needs to be in between 0 and 1.
         targetList(10)= "Freq_write ="  ! A frequency.
         targetList(11)= "Restart ="     ! Either 0 or 1.
+        targetList(12)= "P ="           ! Have N possible proportions.
         !
         dimension_lattice = 0
         !
@@ -94,7 +104,14 @@ contains
         !
         ! Allocate the data with respect of the size of the matrix.
         !
-        allocate(sigma(Number_of_species),Name(Number_of_species), epsilon_(Number_of_species))
+        allocate(sigma(Number_of_species),Name(Number_of_species), epsilon_(Number_of_species), Proportion(Number_of_species))
+        allocate(Label(Number_of_species))
+        !
+        ! We put the name of the "Label" which will take number from 1 to infinity which will designate the number linked to
+        ! A specific species.
+        do i = 1, Number_of_species
+            Label(i) = i
+        end do
         !
         rewind(1)
         ! ************
@@ -123,13 +140,13 @@ contains
                     if(line(i:i) == "=") then
                         multi_data_verif = .false.
                         dimension_lattice = 0
-                        if ( density /= -1 .and. N_part /= -1 .and. &
-                        Box_dimension(1) /= -1 .and. Box_dimension(2) /= -1 .and. Box_dimension(3) /= -1 ) then
-                            write(*,*) "Data overflow."
-                            write(*,*) "Please do not enter the dimension of the box, the density and &
-                            the number of particules at the same time."
-                            stop
-                        end if
+                        !if ( density /= -1 .and. N_part /= -1 .and. &
+                        !Box_dimension(1) /= -1 .and. Box_dimension(2) /= -1 .and. Box_dimension(3) /= -1 ) then
+                        !    write(*,*) "Data overflow."
+                        !    write(*,*) "Please do not enter the dimension of the box, the density and &
+                        !    the number of particules at the same time."
+                        !    stop
+                        !end if
                         if(TRIM(line(1:i)) == TRIM(targetList(1))) then
                             tmp = TRIM(line(i+1:len(line)))
                             read(tmp,*) numerical_tmp
@@ -258,6 +275,30 @@ contains
                                 stop
                             end if
                             exit
+                        elseif ( TRIM(line(1:i)) == TRIM(targetList(12)) ) then
+                            do j = 1, len(line)
+                                if ( line(j:j) == ";" ) then
+                                    multi_data_verif = .true.
+                                end if
+                            end do
+                            if (multi_data_verif) then
+                                integer_tmp = i+1
+                                do j = 1, len(line)
+                                    if ( line(j:j) == ";" ) then
+                                        dimension_lattice = dimension_lattice + 1
+                                        tmp = TRIM(line(integer_tmp:j-1))
+                                        integer_tmp = j+1
+                                        read(tmp,*) numerical_tmp
+                                        Proportion(dimension_lattice) = numerical_tmp
+                                    end if
+                                end do
+                                integer_tmp = 0                            
+                            else
+                                tmp = TRIM(line(i+1:len(line)))
+                                read(tmp,*) numerical_tmp
+                                sigma(1) = numerical_tmp
+                                exit
+                            end if
                             ! We can add more loop if we need to search more datas/variables
                         end if
                         exit
@@ -269,23 +310,24 @@ contains
         close(1)
     end subroutine load_input
 
-    subroutine load_input_position()
-        use position, only: Label, coord
+    subroutine load_input_position(allocated_value)
+        use position, only: identity_Label, coord
         use mod_function, only : StripSpaces
         implicit none
         !
         ! Here the input of the position will be made.
         ! We need to follow this format :
         ! LABEL    x     y     z
-        ! Label max size should be 10
+        ! We take the identity label with respect to the number of particles.
         ! x, y and z will be double precision
         ! This function will only read the FIRST position
         !
+        logical, intent(in)     :: allocated_value ! Do we need to allocate the Label and coord?
         character(len=30)       :: input_fort       = './input_output/io_pos_opti.txt'
         character(len=1)        :: target_comment = "#"
         character(len=132)      :: line, tmp
         logical                 :: done, file_exists
-        integer                 :: nlines, integer_tmp, stat
+        integer                 :: nlines, integer_tmp, integer_tmp2, stat
         integer                 :: i,j,k, rank_data, dim_coord
         double precision        :: numerical_tmp
         !
@@ -324,7 +366,9 @@ contains
         !
         ! We allocate the space for the position of each species
         !
-        allocate(Label(nlines),coord(nlines,3))
+        if ( allocated_value ) then
+            allocate(identity_Label(nlines),coord(nlines,3))
+        end if
         !
         ! We put the data of the position of each species.
         !
@@ -354,7 +398,8 @@ contains
                         tmp = TRIM(line(1:i-1))
                         call StripSpaces(tmp)
                         !write(*,*) tmp
-                        Label(rank_data) = tmp(1:10) ! Here we will have a truncation until 10 characters
+                        read(tmp, *) integer_tmp2
+                        identity_Label(rank_data) = integer_tmp2
                         ! Here we will extract the x,y,z positions
                         tmp = ""
                         integer_tmp = i+1
@@ -380,14 +425,14 @@ contains
     end subroutine load_input_position
 
     subroutine load_input_position_last(allocated_value)
-        use position, only: Label, coord
+        use position, only: identity_Label, coord
         use mod_function, only : StripSpaces
         implicit none
         !
         ! Here the input of the position will be made.
         ! We need to follow this format :
         ! LABEL    x     y     z
-        ! Label max size should be 10
+        ! We take the identity label with respect to the number of particles.
         ! x, y and z will be double precision
         ! This function will only read the LAST position
         !
@@ -396,7 +441,7 @@ contains
         character(len=1)        :: target_comment = "#"
         character(len=132)      :: line, tmp
         logical                 :: done, file_exists
-        integer                 :: nlines, nSTOP, integer_tmp, stat
+        integer                 :: nlines, nSTOP, integer_tmp, integer_tmp2, stat
         integer                 :: i,j,k,k_stop, rank_data, dim_coord
         double precision        :: numerical_tmp
         !
@@ -452,7 +497,7 @@ contains
         ! We allocate the space for the position of each species
         !
         if ( allocated_value ) then
-            allocate(Label(nlines),coord(nlines,3))
+            allocate(identity_Label(nlines),coord(nlines,3))
         end if
         !
         ! We put the data of the position of each species.
@@ -473,11 +518,13 @@ contains
             end if
             ! Test for comments or blank lines
             do i=1, len(line)
-                if ( line(1:6) == "-STOP-" ) then
+                if ( line(i:7) == " -STOP-" .or. line(i:6) == "-STOP-" ) then
+                    ! Here we take into account the space!
                     k_stop = k_stop + 1
-                    if ( k_stop /= nSTOP ) then
-                        exit
-                    end if
+                end if
+                ! Do not read any data until we are at the last one.
+                if ( k_stop /= nSTOP-1 ) then
+                    exit
                 end if
                 if(line(i:i) == ' ') cycle ! Remove reading blanks
                 if(line(i:i) == target_comment) then  ! Comment line
@@ -489,8 +536,9 @@ contains
                         rank_data = rank_data + 1
                         tmp = TRIM(line(1:i-1))
                         call StripSpaces(tmp)
-                        !write(*,*) tmp
-                        Label(rank_data) = tmp(1:10) ! Here we will have a truncation until 10 characters
+                        !write(*,*) tmp, nSTOP
+                        read(tmp,*) integer_tmp2
+                        identity_Label(rank_data) = integer_tmp2
                         ! Here we will extract the x,y,z positions
                         tmp = ""
                         integer_tmp = i+1
@@ -515,10 +563,9 @@ contains
         close(1)
     end subroutine load_input_position_last
 
-
     subroutine write_input_position()
         ! This subroutine wil only take care of writing, watever the data. It will append it at the end of the input/output file.
-        use position, only: Label, coord
+        use position, only: identity_Label, coord
         implicit none
         character(len=30)       :: input_fort       = './input_output/io_pos_opti.txt'
         logical                 :: file_exists
@@ -532,8 +579,8 @@ contains
             open(12, file=input_fort, status="new", action="write")
             write(12,*) "# Label    x    y   z"
         end if
-        do i = 1, size(Label)
-            write(12,*) Label(i),";",coord(i,1),";",coord(i,2),";",coord(i,3),";"
+        do i = 1, size(identity_Label)
+            write(12,*) identity_Label(i),";",coord(i,1),";",coord(i,2),";",coord(i,3),";"
         end do
         write(12,*) "-STOP-"
         close(12)
@@ -551,7 +598,7 @@ contains
             stop
         end if
         write(unit,*) "# Label    x    y   z"
-        write(unit,*) "Dummy;0;0;0"
+        write(unit,*) "1;0;0;0;" ! This line will be removed when we will be able to generate coordinates.
         write(unit,*) "-STOP-"
         write(unit,*)
         close(unit)

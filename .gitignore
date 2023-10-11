@@ -970,3 +970,14 @@ CONQUEST-release-master/tools/PostProcessing/timer_module.f90
 CONQUEST-release-master/tools/PostProcessing/timer_stdclocks_module.f90
 CONQUEST-release-master/tools/PostProcessing/units.module.f90
 CONQUEST-release-master/tools/PostProcessing/verstr.f90
+Transfert/P1A/bf.g
+Transfert/P1A/bf.ps
+Transfert/P1A/fort.80
+Transfert/P1A/fort.98
+Transfert/P1A/fort.99
+Transfert/P1A/ising
+Transfert/P1A/ising.f
+Transfert/P1A/mc_vs_bf.g
+Transfert/P1A/mc_vs_bf.ps
+Transfert/P1A/mc.g
+Transfert/P1A/mc.ps
