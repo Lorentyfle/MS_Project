@@ -50,10 +50,29 @@ program main_main
         end if
     end do
     !
+    ! Box_good(Box_dimension, searchB)
+    ! searchB = OUTPUT T/F to say if we have the box as an unknown
+    !
+    ! Param_good(searchB,density,N_part)
+    !
     ! If it's not the case we will compute the value missing and create and random box.
     !
-    ! DNB() => Computation of the value missing.
-
+    ! DNB() => Computation of the value missing
+    ! ********DNB()**********
+    ! Volume = Box(1)*Box(2)*Box(3)
+    ! Density = N_part/Volume
+    ! N_part = round(Volume*density)
+    ! Box(1) = (N_part/density)**(1/3)
+    ! We suppose the box to be a cube
+    ! Box(2) = Box(1)
+    ! Box(3) = Box(1)
+    ! *********************
+    do i = 1, 3
+        if ( (density == -1 .or. N_part == -1) .and. Box_dimension(i) /= -1) then
+            !allocate(coord(N_part,3), identity_Label(N_part))
+            write(*,*) "We need at least two parameters"
+        end if
+    end do
     allocate(coord(N_part,3), identity_Label(N_part))
 
     ! coord_gen() => Generation of the random coordinates/starting point.

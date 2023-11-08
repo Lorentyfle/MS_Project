@@ -33,14 +33,14 @@ The tests where done using MINGW64 and gfortran. If any problems arise, please, 
         - Correction of the input reader. -DONE-
     - Set up : 0%
         - Generation of system of atoms (Van der Waals spheres)
-        - Molecular liquid (small molecule such as HF, H2O, CH4, ...)
-        - Mixture of atoms of several types (Mixtures of van der Waals spheres)
+        - Molecular liquid (small molecule such as HF, H2O, CH4, ...) /REMOVED/
+        - Mixture of atoms of several types (Mixtures of van der Waals spheres) /REMOVED/
     - MC simulation : 0%
         - Gestion of input and outputs.
         - MC algorithm sample the input and output
         - Calculation of the rate of accepted/rejected moves.
         - Calculation of average energy
         - Calculation of the structure of the fluid and comparison with 1954 results (Rahman, Phys. Rev. 136, 405 (1964))
-    - MC simulation of binary mixture : 0%
+    - MC simulation of binary (or N) mixture : 0%
         - Studying a mixture of two species to see the miscibility of two species.
             This is done by varying the ratios of Lennard-Jones parameters (epsilonA/epsilonB and sigmaA = sigmaB)
