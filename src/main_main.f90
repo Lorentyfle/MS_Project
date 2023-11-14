@@ -2,12 +2,15 @@ program main_main
     ! 11/10/2023 : Addition of the squeletton of the main of the program.
     ! Coded by T.Jamin.
     use sub, only : load_input,load_input_position, write_input_position, load_input_position_last
+    use sub, only : coord_gen, random_atom,DNB,Box_good
+    use sub, only : Debug_print
     use constant, only : Temperature, Name, sigma, epsilon_, density, Box_dimension, N_part, Proportion
     use constant, only : dr,Restart, simulation_time, Number_of_species, Freq_write
     use position, only : Label, coord, identity_Label
-    use mod_function, only : arithmetic_mean, geometric_mean
+    use mod_function, only : arithmetic_mean, geometric_mean,sort_increasing
     implicit none
     double precision:: tmp_numerical
+    logical         :: searchB=.FALSE.
     integer         :: i,j
     !
     ! ******************
@@ -15,18 +18,6 @@ program main_main
     ! ******************
     !
     call load_input()
-    ! Shows that the input are well taken:
-    write(*,*) "T =", Temperature
-    write(*,*) "dr =", dr, "Restart =", Restart," Freq_write =", Freq_write,"Simu_time =", simulation_time
-    write(*,*) "Nbr_spec =", Number_of_species
-    write(*,*) "Label     sigma       epsilon        Proportion      Name"
-    do i = 1, Number_of_species
-        write(*,*) Label(i), sigma(i), epsilon_(i), Proportion(i), Name(i)
-    end do
-    write(*,*) "Box dimension ="
-    write(*,*) Box_dimension
-    write(*,*) "d =", density
-    write(*,*) "Npart =", N_part
     !
     ! *******************************
     ! Generation of starting position
@@ -69,24 +60,23 @@ program main_main
     ! *********************
     do i = 1, 3
         if ( (density == -1 .or. N_part == -1) .and. Box_dimension(i) /= -1) then
-            !allocate(coord(N_part,3), identity_Label(N_part))
             write(*,*) "We need at least two parameters"
         end if
     end do
-    allocate(coord(N_part,3), identity_Label(N_part))
+    ! Verification of the box
+    call Box_good(searchB)
+    call DNB(searchB)
 
-    ! coord_gen() => Generation of the random coordinates/starting point.
-
-    ! **For now we read the begining of the file until the functions are done**
-    call load_input_position(.false.)
+    call Debug_print()
+    ! Generation of the input
+    call coord_gen() ! => Generation of the random coordinates/starting point.
+    call random_atom()
 
     ! write_input_position() => Write the input position at the end of the file.
     ! It can also write the output position at the end of the file.
     call write_input_position()
+    stop
     !
-    do i = 1, size(identity_Label)
-        write(*,*) identity_Label(i), coord(i,1),coord(i,2),coord(i,3)
-    end do
     !
     ! The use of -1 is non-physical to amplify the fact it's a dummy variable.
     ! If Npart is equal to -1 we need to compute it with d and Bdim.

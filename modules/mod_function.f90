@@ -3,6 +3,7 @@ module mod_function
     
 contains
     ! 11/10/2023 : Addition of the arithmetic_mean() and geometric_mean() subroutines.
+    ! 13/11/2023 : Addition of sort_increasing()
     ! By T.Jamin
     subroutine StripSpaces(string)
         implicit none
@@ -65,4 +66,66 @@ contains
         
         mean_value = (Prod_data) ** (1/size_data)
     end subroutine geometric_mean
+
+    subroutine sort_increasing(Input_vector,  Output_vector)
+        implicit none
+        double precision,dimension(3), intent(in) :: Input_vector
+        double precision,dimension(3), intent(out) ::  Output_vector
+        !
+        !Setup
+        !
+        double precision, dimension(3)  :: u                         ! Set the vector
+        integer                         :: n,i,j,k,s,boucle          ! Rank.
+        integer                         :: x,y                       ! Set variables
+        !
+        !Init
+        !
+        u = Input_vector
+        s = size(u)
+        n = 1
+        k = 0
+        boucle = 0
+        !
+        !Program
+        !
+
+        do while (n < s)
+            x = u(n)
+            y = u(n+1)
+            if ( x > y ) then
+                u(n)    = y
+                u(n+1)  = x
+            end if
+            n = n+1
+            if ( n == s ) then
+                do j = 1, s
+                    if ( u(j)>u(j+1) ) then
+                        k = k+1
+                    end if
+                end do
+                if ( k > 1 ) then
+                    n = 0
+                    k = 0
+                    boucle = boucle + 1
+                end if
+            end if
+        end do
+        !
+        ! Show the result
+        !
+        Output_vector = u
+    end subroutine sort_increasing
+
+    subroutine IS_ODD(i,j,k,IS_ODD_r)
+        integer, intent(in) :: i,j,k
+        logical, intent(out) ::  IS_ODD_r
+    
+        if(.not. MOD(i,2) == 0 .AND. .not. MOD(j,2) == 0 .AND. .not. MOD(k,2) == 0) then
+            IS_ODD_r = .TRUE.
+        else
+            IS_ODD_r = .FALSE.
+        end if
+        
+    end subroutine IS_ODD
+    
 end module mod_function

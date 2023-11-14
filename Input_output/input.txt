@@ -12,9 +12,9 @@ T = 87.0d0
 # Please, do not enter the density (here it's the number density), the number of particles and
 # the size of the box at the same time.
 # (no unit)
-density = 1.38d0
-#N_part = 3
-#bdimension = 1;3;2;
+#density = 1.38d0
+N_part = 864
+bdimension = 34.7786;34.7786;34.7786;
 
 # dr (allowed displacement.)
 # Is by default 0.5
@@ -30,13 +30,13 @@ Freq_write = 10
 Restart = 0
 
 # Sigma (A)
-sigma = 3.4d0;2.0d0;
+sigma = 0.1d0;
 # Energy in kJ/mol
-epsilon = 1.0d0;4.0d0;
+epsilon = 1.0d0;
 # Name
-Name = H2O;CH3O+;
+Name = Ar;
 # Proportion of each compounds
-P = 1;2;
+P = 1;
 # epsilon and sigma should be list of same size as Name
 # DONE
 # Manque nombre de particules en fonction des espèces

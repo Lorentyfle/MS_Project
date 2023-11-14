@@ -10,6 +10,9 @@ contains
     ! Variable Label goes from string to integer. Edits necessary are added.
     ! Addition of identity_Label that will be the tag of each individual molecules and not the type of molecules.
     ! The program will now not stop if NdB are given in the input file.
+    ! 13/11/2023 : Addition of coord_gen()
+    ! The Box dimension can now take floats
+    ! 14/11/2023 : Addition of random_atom(), DNB() and Box_good()
     ! Coded by T.Jamin.
     subroutine load_input()
         ! This subroutine will read the specific input file and put the variables into global variable 
@@ -229,14 +232,17 @@ contains
                             density = numerical_tmp
                             exit
                         elseif ( TRIM(line(1:i)) == TRIM(targetList(6)) ) then
+                            integer_tmp = i + 1
                             do j = 1, len(line)
                                 if ( line(j:j) == ";" ) then
                                     dimension_lattice = dimension_lattice + 1
-                                    tmp = TRIM(line(j-1:j-1))
-                                    read(tmp,*) integer_tmp
-                                    Box_dimension(dimension_lattice) = integer_tmp
+                                    tmp = TRIM(line(integer_tmp:j-1))
+                                    integer_tmp = j+1
+                                    read(tmp,*) numerical_tmp
+                                    Box_dimension(dimension_lattice) = numerical_tmp
                                 end if
                             end do
+                            integer_tmp = 0
                             exit
                         elseif ( TRIM(line(1:i)) == TRIM(targetList(7)) ) then
                             tmp = TRIM(line(i+1:len(line)))
@@ -580,13 +586,17 @@ contains
             write(12,*) "# Label    x    y   z"
         end if
         do i = 1, size(identity_Label)
-            write(12,*) identity_Label(i),";",coord(i,1),";",coord(i,2),";",coord(i,3),";"
+            if ( .not. identity_Label(i) == 0 ) then
+                write(12,*) identity_Label(i),";",coord(i,1),";",coord(i,2),";",coord(i,3),";"
+            end if
         end do
         write(12,*) "-STOP-"
         close(12)
     end subroutine write_input_position
 
     subroutine create_file(filename)
+        implicit none
+        
         character(*), intent(in) :: filename
         integer                  :: unit=20
         integer                  :: ierr
@@ -604,4 +614,251 @@ contains
         close(unit)
     end subroutine create_file
 
+    ! /!\ Verify if coord and identity label are allocated /!\
+    ! If we need to create them, they will surely aren't
+    subroutine DNB(searchB)
+        !
+        ! ***********
+        ! * Modules *
+        ! ***********
+        use constant, only : N_part, density, Box_dimension
+        !
+        implicit none
+        logical, intent(in) :: searchB
+        double precision    :: Volume=1.0d0
+        integer             :: i
+        !
+        if ( .not. searchB ) then
+            do i = 1, 3
+                Volume = Box_dimension(i)*Volume
+            end do
+        end if
+        !
+        if (searchB) then
+            do i = 1, 3
+                Box_dimension(i) = (density/N_part)**(1/3)
+            end do
+        elseif (density == - 1) then
+            density = N_part/Volume
+        else
+            N_part = Volume*density
+        end if
+        !
+    end subroutine DNB
+
+    subroutine Box_good(searchB)
+        !
+        ! ***********
+        ! * Modules *
+        ! ***********
+        use constant, only : N_part, density, Box_dimension
+        !
+        implicit none
+        logical, intent(out) :: searchB
+        integer :: i
+        double precision :: Do_we_have_box
+        !
+        ! Initialisation
+        !
+        Do_we_have_box = 0.d0
+        searchB = .FALSE.
+        !
+        do i = 1, 3
+            if ( Box_dimension(i) == -1 ) then
+                Do_we_have_box = Do_we_have_box - 1
+            end if
+        end do
+        if ( Do_we_have_box == - 3 ) then
+            searchB = .TRUE.
+        elseif ( Do_we_have_box == -2 ) then
+            write(*,*) "We will assume a cubic box."
+            Box_dimension(2) = Box_dimension(1)
+            Box_dimension(3) = Box_dimension(1)
+        elseif (Do_we_have_box == -1) then
+            if ( Box_dimension(1) == Box_dimension(2) ) then
+                write(*,*) "We will assume a cubic box."
+                Box_dimension(3) = Box_dimension(1)
+            else
+                write(*,*) "Please input three dimensions for the box."
+                stop
+            end if
+        end if
+
+    end subroutine Box_good
+
+    subroutine coord_gen()
+        ! This subroutine will generate a grid depending on the values of the box dimension.
+        ! If the value of the box is inferior to the maximum sigma, the program will stop.
+        ! ***********
+        ! * Modules *
+        ! ***********
+        use constant, only : Name, sigma, epsilon_, Proportion
+        use constant, only : N_part, density, Box_dimension
+        use constant, only : dr, Restart, simulation_time, Freq_write
+        use constant, only : Number_of_species
+        use position, only : identity_Label, coord
+        use mod_function, only : sort_increasing, IS_ODD
+        implicit none
+        
+        double precision, dimension(3):: Organise_Box
+        integer :: n,m,l
+        integer :: N_inside,maximum_sigma,P
+        integer :: i,j,k
+        logical :: IS_ODD_loop
+        ! We sort the values of the box
+        call sort_increasing(Box_dimension,Organise_Box)
+        ! We call the variables
+        n = 1
+        N_inside = 0
+        do while (N_inside < N_part)
+            n = n+1
+            m = n*ceiling(Organise_Box(2)/Organise_Box(1))
+            l = n*ceiling(Organise_Box(3)/Organise_Box(1))
+            N_inside = n*m*l
+        end do
+        maximum_sigma = maxloc(sigma,dim=1)
+        ! Verification to avoid generating too small boxes.
+        if ( Organise_Box(1)/n < sigma(maximum_sigma) .or. &
+        Organise_Box(2)/m < sigma(maximum_sigma) .or. Organise_Box(3)/l < sigma(maximum_sigma) ) then
+            write(*,*) "Error. The value of sigma cannot be inferior to the minimum value of the box."
+            write(*,*) "To solve this issue, you can decrease the density," 
+            write(*,*) "the number of total atoms or, increase the value of the box."
+            write(*,*) "Box dimensions:"
+            write(*,*) Organise_Box(1)/n,Organise_Box(2)/m,Organise_Box(3)/l
+            write(*,*) "Maximum value of sigma:"
+            write(*,*) sigma(maximum_sigma)
+            stop
+        end if
+        !
+        ! (n,m,l) is the number of "cubes" per side length.
+        allocate(coord(N_inside,3))
+        P = 0
+        do while (P < N_inside)
+            do i = 1, 2*n-1
+                do j = 1, 2*m-1
+                    do k = 1, 2*l-1
+                        call IS_ODD(i,j,k,IS_ODD_loop)
+                        if ( IS_ODD_loop ) then
+                            P = P + 1
+                            coord(P,1) = i * Organise_Box(1)/(2*n)
+                            coord(P,2) = j * Organise_Box(2)/(2*m)
+                            coord(P,3) = k * Organise_Box(3)/(2*l)
+                        end if
+                    end do
+                end do
+            end do
+        end do
+        !write(*,*) "n,l,m"
+        !write(*,*) n,l,m
+        !write(*,*) "Number of sites"
+        !write(*,*) N_inside
+        !write(*,*) "Small box dimensions"
+        !write(*,*) Organise_Box(1)/n, Organise_Box(2)/m,Organise_Box(3)/l
+        !write(*,*) "Total dimension"
+        !do j = 1, size(coord,1)
+        !    write(*,*) (coord(j,i), i=1, size(coord,2))
+        !end do
+        !stop
+    end subroutine coord_gen
+
+    subroutine random_atom()
+        ! This subroutine will put randomly one atom inside one position.
+        ! It will create the identity_Label vector
+        ! ***********
+        ! * Modules *
+        ! ***********
+        use constant, only : Name, sigma, epsilon_, Proportion
+        use constant, only : N_part, density, Box_dimension
+        use constant, only : dr, Restart, simulation_time, Freq_write
+        use constant, only : Number_of_species
+        use position, only: identity_Label, coord, Label
+        implicit none
+    
+        integer :: i,j
+        integer :: N_cell
+        integer :: Atom_Proportion=0
+        double precision :: Rand
+        double precision, dimension(:), allocatable :: N_particule_in_species
+        integer, dimension(:), allocatable :: counter_N_particule_in_species
+        double precision, dimension(:), allocatable :: weights, Proport
+        ! To do, change the names : Proportion to Numerator_Proportion
+
+        N_cell = size(coord,1)
+
+        allocate(weights(Number_of_species+1))
+        allocate(N_particule_in_species(Number_of_species))
+        allocate(counter_N_particule_in_species(Number_of_species+1))
+        allocate(identity_Label(size(coord,1)))
+        ! Computation of the weights
+        do i = 1, Number_of_species
+            Atom_Proportion = Atom_Proportion + Proportion(i)
+        end do
+        do i = 1, Number_of_species
+            Proport = Proportion/Atom_Proportion
+        end do
+        do i = 1, Number_of_species
+            N_particule_in_species(i) = (Proport(i) * N_part)
+            counter_N_particule_in_species(i) = floor(N_particule_in_species(i)) ! For the counter
+        end do
+        do i = 1, Number_of_species
+            weights(i) = (N_particule_in_species(i))/N_cell
+        end do
+        ! Initialisation
+        weights(Number_of_species+1) = 0
+        counter_N_particule_in_species(Number_of_species+1) = 0
+        do i = 1, Number_of_species
+            weights(Number_of_species+1) = weights(i) + weights(Number_of_species+1)
+            ! We now add the void into the counter
+            counter_N_particule_in_species(Number_of_species+1) = counter_N_particule_in_species(Number_of_species+1) &
+            + counter_N_particule_in_species(i)
+        end do
+        weights(Number_of_species+1) = 1 - weights(Number_of_species+1)
+        ! Addition of void into the counter
+        counter_N_particule_in_species(Number_of_species+1) = N_cell - counter_N_particule_in_species(Number_of_species+1)
+        ! Initialisation of the label
+        identity_Label = 0
+        ! *****************
+        ! Random filling of the species inside the lattice
+        do i = 1, size(coord,1)
+            1 do j = 1, Number_of_species + 1
+                call random_number(Rand)
+                if ( weights(j) > Rand .and. .not. counter_N_particule_in_species(j) == 0) then
+                    if ( j == (Number_of_species + 1) ) then
+                        identity_Label(i) = 0
+                        counter_N_particule_in_species(j) = counter_N_particule_in_species(j) - 1
+                        exit
+                    else
+                        identity_Label(i) = Label(j)
+                        counter_N_particule_in_species(j) = counter_N_particule_in_species(j) - 1
+                        exit
+                    end if
+                elseif ( j == (Number_of_species + 1)) then
+                    go to 1
+                end if
+            end do
+        end do
+        ! Deallocations to do
+    end subroutine random_atom
+
+    subroutine Debug_print()
+        use constant, only : Temperature, Name, sigma, epsilon_, density, Box_dimension, N_part, Proportion
+        use constant, only : dr,Restart, simulation_time, Number_of_species, Freq_write
+        use position, only : Label, coord, identity_Label
+        use mod_function, only : arithmetic_mean, geometric_mean,sort_increasing
+        !
+        implicit none
+        integer     :: i,j
+        
+        write(*,*) "T =", Temperature
+        write(*,*) "dr =", dr, "Restart =", Restart," Freq_write =", Freq_write,"Simu_time =", simulation_time
+        write(*,*) "Nbr_spec =", Number_of_species
+        write(*,*) "Label     sigma       epsilon        Proportion      Name"
+        do i = 1, Number_of_species
+            write(*,*) Label(i), sigma(i), epsilon_(i), Proportion(i), Name(i)
+        end do
+        write(*,*) "Box dimension ="
+        write(*,*) Box_dimension
+        write(*,*) "d =", density
+        write(*,*) "Npart =", N_part
+    end subroutine Debug_print
 end module sub

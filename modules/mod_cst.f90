@@ -9,13 +9,13 @@ module constant
     double precision,   allocatable,dimension(:)    :: sigma
     double precision,   allocatable,dimension(:)    :: epsilon_
     double precision,   allocatable,dimension(:)    :: Proportion
-    double precision    :: density=-1
+    double precision    :: density=-1.0d0
     double precision    :: dr=0.5 ! In between 0 and 1
     integer             :: N_part=-1
     integer             :: Restart=0
     integer             :: simulation_time=1 ! Time in seconds
     integer             :: Freq_write=0      ! Frequency in fs
-    integer, dimension(3):: Box_dimension=[-1,-1,-1]
+    double precision, dimension(3):: Box_dimension=[-1.0d0,-1.0d0,-1.0d0]
     integer             :: Number_of_species=1
     ! The use of -1 is non-physical to amplify the fact it's a dummy variable.
     ! If Npart is equal to -1 we need to compute it with d and Bdim.
