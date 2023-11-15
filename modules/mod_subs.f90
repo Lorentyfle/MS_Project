@@ -509,7 +509,6 @@ contains
                     exit
                 elseif (line(i:6) == "-STOP-") then
                     nlines = nlines - 1
-                    write(*,*) line(i:6)
                     go to 10
                 end if
             end do
