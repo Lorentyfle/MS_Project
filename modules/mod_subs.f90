@@ -896,15 +896,98 @@ contains
         end if
     end subroutine dr_verif
 
-    subroutine random_select()
-        
+    subroutine random_select(coord, N_part, atom, index)
+
         implicit none
-        double precision, dimension(3) :: Rand
-        integer i,j
+        integer, intent(in) :: N_part
+        double precision, dimension(N_part, 3), intent(in) :: coord 
+        double precision, dimension(3), intent(out) :: atom
+        integer, intent(out) :: index
+
+        double precision :: Rand
+        integer :: i
+        
+        call random_number(Rand)
+        index = NINT(Rand * N_part)
         do i = 1, 3
-            call random_number(Rand(i))
+            atom(i) = coord(index, i)
         end do
 
     end subroutine random_select
+
+    subroutine random_displace(identity_Label, atom_in, sigma, Number_of_species, atom_out)
+
+        implicit none
+        integer, intent(in) :: Number_of_species, identity_Label
+        double precision, dimension(3), intent(in) :: atom_in
+        double precision, dimension(3), intent(out) :: atom_out
+
+        double precision, dimension(Number_of_species) :: sigma
+        double precision, dimension(3) :: Rand, sign
+        double precision :: a
+        integer :: i,j
+
+        do i = 1, 3
+            call random_number(Rand(i))
+            call random_number(sign(i))
+            if ( sign(i) < 0.5 ) then
+                Rand(i) = -Rand(i)
+            end if
+        end do
+
+        a = sigma(identity_Label)/2
+
+        do i = 1, 3
+            atom_out(i) = atom_in(i) + a * Rand(i)
+        end do
+    end subroutine random_displace
+
+    subroutine minimum_image(coord, atom, index, box, N_part, distances)
+
+        use mod_function, only : dij
+
+        implicit none
+        integer, intent(in) :: index, N_part
+        double precision, dimension(N_part, 3), intent(in) :: coord 
+        double precision, dimension(3), intent(in) :: atom, box
+        double precision, dimension(N_part - 1), intent(out) :: distances
+
+        double precision, dimension(3) :: neighbor
+        integer :: i, j
+
+        do i = 1, N_part
+            do j = 1, 3
+                neighbor(j) = coord(i, j)
+            end do
+            if ( .NOT. i == index ) then
+                distances(i) = dij(neighbor, atom, box)
+            end if
+        end do
+
+    end subroutine minimum_image
+
+    subroutine Metropolis(Delta_E, T, accept)
+
+        implicit none
+        double precision, intent(in) :: Delta_E, T
+        logical, intent(out) :: accept
+
+        double precision :: probability, Rand, beta, k_B
+
+        if (Delta_E < 0) then
+            accept = .TRUE.
+        else
+            call random_number(Rand)
+            k_B = 1.380649E-23
+            beta = 1/(k_B * T)
+            probability = EXP(-beta * Delta_E)
+            if ( Rand < probability ) then
+                accept = .TRUE.
+            else 
+                accept = .FALSE.
+            end if
+        end if 
+
+    end subroutine Metropolis
 
 end module sub

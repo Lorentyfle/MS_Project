@@ -13,7 +13,7 @@ module constant
     double precision    :: dr=0.5 ! Value by default
     integer             :: N_part=-1
     integer             :: Restart=0
-    integer             :: simulation_time=1 ! Time in seconds
+    integer             :: simulation_time=1 ! Number of MC moves we try
     integer             :: Freq_write=0      ! Frequency in fs
     double precision, dimension(3):: Box_dimension=[-1.0d0,-1.0d0,-1.0d0]
     integer             :: Number_of_species=1

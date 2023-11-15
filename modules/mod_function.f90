@@ -149,5 +149,54 @@ contains
         
     end function dij
 
-    
+    function Lorentz_Berthelot(atom_identity, neighbor_identity, epsilon_, sigma, Number_of_species) result(dimer_LJ_params)
+
+        ! LJ_params = (epsilon_1, epsilon_2, sigma_1, sigma_2)
+
+        implicit none
+        integer, intent(in) :: atom_identity, neighbor_identity, Number_of_species
+        double precision, dimension(Number_of_species), intent(in) :: epsilon_, sigma
+
+        double precision, dimension(2) :: epsilons, sigmas
+        double precision, dimension(2) :: dimer_LJ_params
+
+        epsilons(1) = epsilon_(atom_identity)
+        epsilons(2) = epsilon_(neighbor_identity)
+        sigmas(2) = sigma(atom_identity)
+        sigmas(2) = sigma(neighbor_identity)
+
+        call geometric_mean(epsilons, dimer_LJ_params(1))
+        call arithmetic_mean(sigmas, dimer_LJ_params(2))
+            
+    end function Lorentz_Berthelot
+
+    function Lennard_Jones(r, LJ_params) result(Edimer)
+
+        implicit none 
+        double precision, dimension(2), intent(in) :: LJ_params
+        double precision, intent(in) :: r
+        double precision :: Edimer
+
+        double precision :: e, o
+
+        e = LJ_params(1)
+        o = LJ_params(2)
+
+        Edimer = 4*e*((o/r)**12 - (o/r)**6)
+
+    end function Lennard_Jones
+
+    ! function energy(cutoff, coord, atom, coord) result(Epot)
+
+    !     implicit none
+
+
+    !     call sort_increasing(distances, distances_sorted)
+        
+    !     do i = 1, N_part - 1
+
+    !     end do
+
+    ! end function energy
+
 end module mod_function

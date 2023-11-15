@@ -114,5 +114,32 @@ program main_main
     else
         write(*,*) "MC of a LJ fluid."
     end if
+    ! do i = 1, simulation_time
+    !     call random_select(coord, atom, index)                      ! pick an atom at random, and keep track of its position in coord()
+        
+    !     energy_old = energy(cutoff, coord, atom, index)             ! find the starting energy
+        
+    !     call random_displace(atom_identity, atom, move_atom)        ! perturb the position in random directions
+        
+    !     energy_new = energy(cutoff, coord, move_atom, index)        ! find the new energy
+        
+    !     Delta_E = energy_old - energy_new
 
+    !     call Metropolis(Delta_E, T, accept)                         ! use the Metropolis criterion to tell if we accept the new configuration
+    !     if ( accept ) then
+    !         do j = 1, 3
+    !             coord(index, j) = move_atom(j)
+    !         end do
+    !         accepted_moves = accepted_moves + 1
+    !     end if
+
+    !     acceptance_ratio = accepted_moves / i
+        
+    !     if ( MOD(i, Freq_write) == 0 ) then
+    !         write_to_output(coord, energy_new, acceptance_ratio)    ! save the configuration, potential energy 
+    !     end if                                                      ! and keep track of how many MC moves we accept/reject
+
+    !     i = i + 1
+    ! end do
+    !
 end program main_main
