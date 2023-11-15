@@ -4,6 +4,7 @@ module mod_function
 contains
     ! 11/10/2023 : Addition of the arithmetic_mean() and geometric_mean() subroutines.
     ! 13/11/2023 : Addition of sort_increasing()
+    ! 14/11/2023 : Addition of dij()
     ! By T.Jamin
     subroutine StripSpaces(string)
         implicit none
@@ -127,5 +128,26 @@ contains
         end if
         
     end subroutine IS_ODD
+
+    function dij(ri,rj,box) result(dij_r)
+        use constant, only: dr
+        implicit none
+        
+        double precision, dimension(3), intent(in) :: ri,rj
+        double precision, dimension(3), intent(in) :: box
+        double precision :: dij_r
+        
+        double precision, dimension(3) :: ij
+        integer     :: k
+
+        do k = 1, 3
+            ij = ri(k) - rj(k)
+            ij = ij(k) - box(k)* dfloat(idint(ij(k)/(dr)))
+        end do
+
+        dij_r = dsqrt( ij(1)**2 + ij(2)**2 + ij(3)**2)
+        
+    end function dij
+
     
 end module mod_function

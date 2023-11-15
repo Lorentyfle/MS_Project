@@ -2,7 +2,7 @@ program main_main
     ! 11/10/2023 : Addition of the squeletton of the main of the program.
     ! Coded by T.Jamin.
     use sub, only : load_input,load_input_position, write_input_position, load_input_position_last
-    use sub, only : coord_gen, random_atom,DNB,Box_good
+    use sub, only : coord_gen, random_atom,DNB, dr_verif,Box_good
     use sub, only : Debug_print
     use constant, only : Temperature, Name, sigma, epsilon_, density, Box_dimension, N_part, Proportion
     use constant, only : dr,Restart, simulation_time, Number_of_species, Freq_write
@@ -66,24 +66,33 @@ program main_main
     ! Verification of the box
     call Box_good(searchB)
     call DNB(searchB)
-
+    !
+    ! Verification of dr
+    !
+    call dr_verif()
+    !
     call Debug_print()
     ! Generation of the input
     call coord_gen() ! => Generation of the random coordinates/starting point.
     call random_atom()
-
+    !
     ! write_input_position() => Write the input position at the end of the file.
     ! It can also write the output position at the end of the file.
     call write_input_position()
-    stop
-    !
     !
     ! The use of -1 is non-physical to amplify the fact it's a dummy variable.
     ! If Npart is equal to -1 we need to compute it with d and Bdim.
     ! If d is equal to -1 we need to compute it with Npart and Bdim.
     ! If Bdim have a -1 in the list, we need to compute it with Npart and d.
     !
+    deallocate(coord,identity_Label)
+    call load_input_position_last(.true.)
+    do i = 1, size(coord,1)
+            write(*,*) coord(i,:)
+    end do
 
+    write(*,*) identity_Label
+    !
     ! ***********************************
     ! Monte Carlo of Lennard Jones fluid
     ! ***********************************

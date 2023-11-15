@@ -44,3 +44,13 @@ The tests where done using MINGW64 and gfortran. If any problems arise, please, 
     - MC simulation of binary (or N) mixture : 0%
         - Studying a mixture of two species to see the miscibility of two species.
             This is done by varying the ratios of Lennard-Jones parameters (epsilonA/epsilonB and sigmaA = sigmaB)                       -0%-
+
+
+MC simulation steps to do:
+
+1) Randomly select an atom.
+2) Displacement.
+3) Apply bondary condition.
+4) Calculation energy.          Energy = f_energy(config)
+5) Test energy .i.e.: Metropolis condition.
+6) Go back to 1.

@@ -10,7 +10,7 @@ module constant
     double precision,   allocatable,dimension(:)    :: epsilon_
     double precision,   allocatable,dimension(:)    :: Proportion
     double precision    :: density=-1.0d0
-    double precision    :: dr=0.5 ! In between 0 and 1
+    double precision    :: dr=0.5 ! Value by default
     integer             :: N_part=-1
     integer             :: Restart=0
     integer             :: simulation_time=1 ! Time in seconds

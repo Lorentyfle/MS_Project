@@ -13,6 +13,8 @@ contains
     ! 13/11/2023 : Addition of coord_gen()
     ! The Box dimension can now take floats
     ! 14/11/2023 : Addition of random_atom(), DNB() and Box_good()
+    ! Addition of dr_verif()
+    ! 15/11/2023 : correction of load_input_last() to count the number of species at the last line.
     ! Coded by T.Jamin.
     subroutine load_input()
         ! This subroutine will read the specific input file and put the variables into global variable 
@@ -258,9 +260,9 @@ contains
                             tmp = TRIM(line(i+1:len(line)))
                             read(tmp,*) numerical_tmp
                             dr = numerical_tmp
-                            if ( dr < 0 .or. dr > 1 ) then
+                            if ( dr < 0 ) then
                                 write(*,*) "Value out of range."
-                                write(*,*) "dr must be in between 0 and 1."
+                                write(*,*) "dr must be in superior to 0."
                                 stop
                             end if
                             exit
@@ -468,23 +470,6 @@ contains
         open(1,file=input_fort,position="rewind")
         !
         nlines = 0
-        ! We suppose that we do not loose particules/atoms/molecules in our system.
-        ! So we can take the first step to know the size of our matrix.
-        do
-            read(1,*,end=10) line
-            nlines = nlines + 1
-            do i=1, len(line)                
-                if(line(i:1) == ' ') cycle ! Remove reading blanks
-                if(line(i:1) == target_comment) then  ! Comment line
-                    nlines = nlines - 1
-                    exit
-                elseif (line(i:6) == "-STOP-") then
-                    nlines = nlines - 1
-                    go to 10
-                end if
-            end do
-        end do
-        10  rewind(1)
         ! We count the number of loop done.
         nSTOP = 0
         do
@@ -499,6 +484,37 @@ contains
             end do
         end do
         12  rewind(1)
+        ! We suppose that we CAN loose particules/atoms/molecules in our system.
+        ! Like we can test multiple systems one after the other
+        ! So we can take the first step to know the size of our matrix.
+        k_stop = 0
+        nlines = -1 ! To avoid having one line more
+        do
+            read(1,*,end=10) line
+            nlines = nlines + 1
+            do i=1, len(line)            
+                if(line(i:1) == ' ') cycle ! Remove reading blanks
+                if ( line(i:6) == "-STOP-" ) then
+                    ! Here we take into account the space!
+                    k_stop = k_stop + 1
+                end if  
+                if(line(i:1) == target_comment) then  ! Comment line
+                    nlines = nlines - 1
+                    exit
+                ! Do not read any data until we are at the last one.
+                elseif ( k_stop < nSTOP-1 ) then
+                    nlines = nlines - 1
+                    exit
+                elseif (k_stop == nSTOP-1) then
+                    exit
+                elseif (line(i:6) == "-STOP-") then
+                    nlines = nlines - 1
+                    write(*,*) line(i:6)
+                    go to 10
+                end if
+            end do
+        end do
+        10  rewind(1)
         !
         ! We allocate the space for the position of each species
         !
@@ -615,7 +631,8 @@ contains
     end subroutine create_file
 
     ! /!\ Verify if coord and identity label are allocated /!\
-    ! If we need to create them, they will surely aren't
+    ! coord_gen and random_atom will always be used first so will
+    ! allocate this values
     subroutine DNB(searchB)
         !
         ! ***********
@@ -861,4 +878,34 @@ contains
         write(*,*) "d =", density
         write(*,*) "Npart =", N_part
     end subroutine Debug_print
+
+    subroutine dr_verif()
+        use constant, only : dr, Box_dimension
+        use mod_function, only : sort_increasing
+        
+        implicit none
+        double precision, dimension(3) :: Min_Box_dim
+
+        Min_Box_dim = Box_dimension/2
+
+        call sort_increasing(Min_Box_dim, Min_Box_dim)
+
+        write(*,*) Min_Box_dim(1)
+        if ( dr > Min_Box_dim(1) ) then
+            write(*,*) "Cut off too big, the lower one is taken."
+            dr = Min_Box_dim(1)
+        end if
+    end subroutine dr_verif
+
+    subroutine random_select()
+        
+        implicit none
+        double precision, dimension(3) :: Rand
+        integer i,j
+        do i = 1, 3
+            call random_number(Rand(i))
+        end do
+
+    end subroutine random_select
+
 end module sub
