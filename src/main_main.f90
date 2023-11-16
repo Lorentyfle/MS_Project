@@ -4,6 +4,7 @@ program main_main
     use sub, only : load_input,load_input_position, write_input_position, load_input_position_last
     use sub, only : coord_gen, random_atom,DNB, dr_verif,Box_good
     use sub, only : Debug_print
+    use sub, only : random_select,random_displace,minimum_image,Metropolis
     use constant, only : Temperature, Name, sigma, epsilon_, density, Box_dimension, N_part, Proportion
     use constant, only : dr,Restart, simulation_time, Number_of_species, Freq_write
     use position, only : Label, coord, identity_Label
@@ -12,6 +13,9 @@ program main_main
     double precision:: tmp_numerical
     logical         :: searchB=.FALSE.
     integer         :: i,j
+    ! values to test the outputs
+    double precision, dimension(3):: atom_chosen, atom_displaced
+    integer                       :: atom_index 
     !
     ! ******************
     ! Reading the input
@@ -87,11 +91,12 @@ program main_main
     !
     deallocate(coord,identity_Label)
     call load_input_position_last(.true.)
-    do i = 1, size(coord,1)
-            write(*,*) coord(i,:)
-    end do
-
-    write(*,*) identity_Label
+    
+    !do i = 1, size(coord,1)
+    !        write(*,*) coord(i,:)
+    !end do
+    !write(*,*) identity_Label
+    
     !
     ! ***********************************
     ! Monte Carlo of Lennard Jones fluid
@@ -114,8 +119,13 @@ program main_main
     else
         write(*,*) "MC of a LJ fluid."
     end if
+    call random_select(atom_chosen,atom_index)
+    call random_displace(atom_chosen,atom_index,atom_displaced)
+    write(*,*) atom_chosen
+    write(*,*) atom_index
+    write(*,*) atom_displaced
     ! do i = 1, simulation_time
-    !     call random_select(coord, atom, index)                      ! pick an atom at random, and keep track of its position in coord()
+    !     call random_select( atom, index)                      ! pick an atom at random, and keep track of its position in coord()
         
     !     energy_old = energy(cutoff, coord, atom, index)             ! find the starting energy
         
