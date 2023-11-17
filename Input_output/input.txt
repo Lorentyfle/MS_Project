@@ -32,13 +32,13 @@ Freq_write = 10
 Restart = 0
 
 # Sigma (A)
-sigma = 0.1d0;
+sigma = 0.1d0;0.2d0;
 # Energy in kJ/mol
-epsilon = 1.0d0;
+epsilon = 1.0d0;5.0d0;
 # Name
-Name = Ar;
+Name = Ar;Ne;
 # Proportion of each compounds
-P = 1;
+P = 1;1;
 # epsilon and sigma should be list of same size as Name
 # DONE
 # Manque nombre de particules en fonction des espèces

@@ -5,6 +5,7 @@ contains
     ! 11/10/2023 : Addition of the arithmetic_mean() and geometric_mean() subroutines.
     ! 13/11/2023 : Addition of sort_increasing()
     ! 14/11/2023 : Addition of dij()
+    ! 17/11/2023 : Correction LJ function
     ! By T.Jamin
     subroutine StripSpaces(string)
         implicit none
@@ -49,6 +50,27 @@ contains
         mean_value = (Sum_data)/(size_data)
     end subroutine arithmetic_mean
 
+    ! If we want to transfert the means from sub to functions
+    function fn_arithmetic_mean(datas) result(mean_value)
+        ! This function will compute the arithmetic mean difference of a vector of n data.
+        implicit none
+        double precision,dimension(:), intent(in) :: datas
+        double precision    ::  mean_value
+        integer             :: size_data
+        double precision    :: Sum_data
+        integer             :: i
+        !
+        ! Initialisation
+        !
+        size_data = size(datas)
+        Sum_data = 0
+        ! Program
+        do i = 1, size_data
+            Sum_data = Sum_data + datas(i)
+        end do
+        mean_value = (Sum_data)/(size_data)
+    end function fn_arithmetic_mean
+
     subroutine geometric_mean(datas,  mean_value)
         ! This subroutine will compute the geometric mean difference of a vector of n data.
         implicit none
@@ -65,22 +87,23 @@ contains
             Prod_data = Prod_data * datas(i)
         end do
         
-        mean_value = (Prod_data) ** (1/size_data)
+        mean_value = (Prod_data)**(1.0d0/size_data)
     end subroutine geometric_mean
 
     subroutine sort_increasing(Input_vector,  Output_vector)
         implicit none
-        double precision,dimension(3), intent(in) :: Input_vector
-        double precision,dimension(3), intent(out) ::  Output_vector
+        double precision,dimension(:), intent(in) :: Input_vector
+        double precision,dimension(:), intent(out) ::  Output_vector
         !
         !Setup
         !
-        double precision, dimension(3)  :: u                         ! Set the vector
+        double precision, dimension(:),allocatable  :: u                         ! Set the vector
         integer                         :: n,i,j,k,s,boucle          ! Rank.
         integer                         :: x,y                       ! Set variables
         !
         !Init
         !
+        allocate(u(size(Input_vector)))
         u = Input_vector
         s = size(u)
         n = 1
@@ -115,6 +138,7 @@ contains
         ! Show the result
         !
         Output_vector = u
+        deallocate(u)
     end subroutine sort_increasing
 
     subroutine IS_ODD(i,j,k,IS_ODD_r)
@@ -150,7 +174,8 @@ contains
     end function dij
 
     function Lorentz_Berthelot(atom_identity, neighbor_identity, epsilon_, sigma, Number_of_species) result(dimer_LJ_params)
-
+        ! A subroutine named sigma_epsilon_dimers() compute this values inside a global matrix.
+        ! Function depreciated
         ! LJ_params = (epsilon_1, epsilon_2, sigma_1, sigma_2)
 
         implicit none
@@ -171,7 +196,6 @@ contains
     end function Lorentz_Berthelot
 
     function Lennard_Jones(r, LJ_params) result(Edimer)
-
         implicit none 
         double precision, dimension(2), intent(in) :: LJ_params
         double precision, intent(in) :: r

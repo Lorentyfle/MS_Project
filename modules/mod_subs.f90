@@ -15,6 +15,7 @@ contains
     ! 14/11/2023 : Addition of random_atom(), DNB() and Box_good()
     ! Addition of dr_verif()
     ! 15/11/2023 : correction of load_input_last() to count the number of species at the last line.
+    ! 17/11/2023 : Addition of the functions to compute and find inside a matrix the values of sigma and epsilon in function of the dimers
     ! Coded by T.Jamin.
     subroutine load_input()
         ! This subroutine will read the specific input file and put the variables into global variable 
@@ -907,7 +908,8 @@ contains
         integer :: i
         !
         call random_number(Rand)
-        index = NINT(Rand * N_part)
+        index = ceiling(Rand * N_part)
+        write(*,*) index
         do i = 1, 3
             atom(i) = coord(index, i)
         end do
@@ -942,6 +944,64 @@ contains
             atom_out(i) = atom_in(i) + a * Rand(i)
         end do
     end subroutine random_displace
+
+    subroutine sigma_epsilon_dimers()
+        ! This subroutine will automatically allocate a matrix containing the interactions between dimers.
+        use position, only : Label, dimers_interact
+        use constant, only : Number_of_species,epsilon_,sigma
+        use mod_function, only : arithmetic_mean, geometric_mean 
+        implicit none
+        !
+        double precision, dimension(2) :: epsilons, sigmas
+        !
+        integer :: Number_pairs
+        integer :: i,j,k
+        !
+        k = 0
+        Number_pairs = Number_of_species * (Number_of_species - 1)/2 + Number_of_species
+        allocate(dimers_interact(Number_pairs,2))
+        !
+        do i = 1, Number_of_species
+            do j = i, Number_of_species
+                k = k + 1
+                !
+                epsilons(1) = epsilon_(i)
+                epsilons(2) = epsilon_(j)
+                sigmas(1) = sigma(i)
+                sigmas(2) = sigma(j)
+                !
+                call geometric_mean(epsilons, dimers_interact(k,1))
+                call arithmetic_mean(sigmas, dimers_interact(k,2))
+                !
+            end do
+        end do
+    end subroutine sigma_epsilon_dimers
+
+    subroutine pick_dimers_data(dimer1,dimer2,epsilon_dimer,sigma_dimer)
+        ! Function that will output the exact value of epsilon and sigma of the dimer entered.
+        use position, only : Label, dimers_interact
+        use constant, only : Number_of_species
+        implicit none
+
+        integer, intent(in) :: dimer1,dimer2
+        double precision, intent(out) :: epsilon_dimer, sigma_dimer
+        integer             :: n,m, index_dimer
+
+        ! Verification to avoid the breaking of the indexing function
+        if ( dimer1 <= dimer2 ) then
+            n = dimer1
+            m = dimer2
+        else
+            n = dimer2
+            m = dimer1
+        end if
+    
+        index_dimer = (n-1)*Number_of_species &
+        - (n-1)*(n-2)/2 + m + 1 - n
+        
+        epsilon_dimer = dimers_interact(index_dimer,1)
+        sigma_dimer   = dimers_interact(index_dimer,2)
+    end subroutine pick_dimers_data
 
     subroutine minimum_image(atom, index, distances)
         use position, only : coord

@@ -3,12 +3,13 @@ program main_main
     ! Coded by T.Jamin.
     use sub, only : load_input,load_input_position, write_input_position, load_input_position_last
     use sub, only : coord_gen, random_atom,DNB, dr_verif,Box_good
-    use sub, only : Debug_print
+    use sub, only : Debug_print, sigma_epsilon_dimers,pick_dimers_data
     use sub, only : random_select,random_displace,minimum_image,Metropolis
     use constant, only : Temperature, Name, sigma, epsilon_, density, Box_dimension, N_part, Proportion
     use constant, only : dr,Restart, simulation_time, Number_of_species, Freq_write
-    use position, only : Label, coord, identity_Label
+    use position, only : Label, coord, identity_Label,dimers_interact
     use mod_function, only : arithmetic_mean, geometric_mean,sort_increasing
+    use mod_function, only : Lennard_Jones
     implicit none
     double precision:: tmp_numerical
     logical         :: searchB=.FALSE.
@@ -16,6 +17,7 @@ program main_main
     ! values to test the outputs
     double precision, dimension(3):: atom_chosen, atom_displaced
     integer                       :: atom_index 
+    double precision,dimension(2) :: LJ_param_dimer
     !
     ! ******************
     ! Reading the input
@@ -76,9 +78,13 @@ program main_main
     call dr_verif()
     !
     call Debug_print()
+    !
+    call sigma_epsilon_dimers()
+    !
     ! Generation of the input
     call coord_gen() ! => Generation of the random coordinates/starting point.
     call random_atom()
+    !
     !
     ! write_input_position() => Write the input position at the end of the file.
     ! It can also write the output position at the end of the file.
@@ -91,12 +97,12 @@ program main_main
     !
     deallocate(coord,identity_Label)
     call load_input_position_last(.true.)
-    
+    !
     !do i = 1, size(coord,1)
     !        write(*,*) coord(i,:)
     !end do
     !write(*,*) identity_Label
-    
+    !
     !
     ! ***********************************
     ! Monte Carlo of Lennard Jones fluid
@@ -115,15 +121,27 @@ program main_main
         write(*,*) "Geometrical mean"
         write(*,*) epsilon_
         write(*,*) tmp_numerical
+        call pick_dimers_data(1,1,LJ_param_dimer(1),LJ_param_dimer(2))
+        write(*,*) LJ_param_dimer
+        call pick_dimers_data(2,2,LJ_param_dimer(1),LJ_param_dimer(2))
+        write(*,*) LJ_param_dimer
+        write(*,*)
+        do i = 1, size(dimers_interact,1)
+            write(*,*) dimers_interact(i,:)
+        end do
         stop
     else
         write(*,*) "MC of a LJ fluid."
     end if
+    call pick_dimers_data(1,1,LJ_param_dimer(1),LJ_param_dimer(2))
+    !
     call random_select(atom_chosen,atom_index)
     call random_displace(atom_chosen,atom_index,atom_displaced)
     write(*,*) atom_chosen
     write(*,*) atom_index
     write(*,*) atom_displaced
+    write(*,*) Label
+    write(*,*) Lennard_Jones(1.0d0,LJ_param_dimer)
     ! do i = 1, simulation_time
     !     call random_select( atom, index)                      ! pick an atom at random, and keep track of its position in coord()
         
