@@ -1005,7 +1005,7 @@ contains
 
     subroutine minimum_image(atom, index, distances)
         use position, only : coord
-        use constant, only : N_part,Box_dimension
+        use constant, only : N_part,Box_dimension,dr
         ! /!\ Verify if the Box dimension is well fitted.
         use mod_function, only : dij
 
@@ -1023,13 +1023,15 @@ contains
             end do
             if ( .NOT. i == index ) then
                 distances(i) = dij(neighbor, atom, Box_dimension)
+            else
+                distances(i) = dr * 2
             end if
         end do
 
     end subroutine minimum_image
 
     subroutine Metropolis(Delta_E, accept)
-        use constant, only : Temperature
+        use constant, only : Temperature, boltzmann
         implicit none
         double precision, intent(in) :: Delta_E
         logical, intent(out) :: accept
@@ -1040,8 +1042,7 @@ contains
             accept = .TRUE.
         else
             call random_number(Rand)
-            k_B = 1.380649E-23
-            beta = 1/(k_B * Temperature)
+            beta = 1/(boltzmann * Temperature)
             probability = EXP(-beta * Delta_E)
             if ( Rand < probability ) then
                 accept = .TRUE.
@@ -1051,5 +1052,33 @@ contains
         end if 
 
     end subroutine Metropolis
+
+    subroutine energy(index, distances, Epot)
+
+        use constant, only : dr, N_part
+        use position, only : identity_Label
+        use mod_function, only : Lennard_Jones
+
+        implicit none
+        double precision, dimension(N_part), intent(in) :: distances
+        integer, intent(in) :: index
+        double precision, intent(out) :: Epot
+
+        double precision, dimension(2) :: LJ_params
+        double precision :: Edimer
+        integer :: i
+        
+        Epot = 0
+        do i = 1, N_part
+            if ( distances(i) < dr ) then
+                call pick_dimers_data(identity_Label(index), identity_Label(i), LJ_params(1), LJ_params(2))
+                Edimer = Lennard_Jones(distances(i), LJ_params)
+            else 
+                Edimer = 0
+            end if
+            Epot = Epot + Edimer
+        end do
+
+    end subroutine energy
 
 end module sub

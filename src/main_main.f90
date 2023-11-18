@@ -1,23 +1,28 @@
 program main_main
     ! 11/10/2023 : Addition of the squeletton of the main of the program.
     ! Coded by T.Jamin.
-    use sub, only : load_input,load_input_position, write_input_position, load_input_position_last
-    use sub, only : coord_gen, random_atom,DNB, dr_verif,Box_good
-    use sub, only : Debug_print, sigma_epsilon_dimers,pick_dimers_data
-    use sub, only : random_select,random_displace,minimum_image,Metropolis
+    use sub, only : load_input, load_input_position, write_input_position, load_input_position_last
+    use sub, only : coord_gen, random_atom, DNB, dr_verif, Box_good
+    use sub, only : Debug_print, sigma_epsilon_dimers, pick_dimers_data
+    use sub, only : random_select, random_displace, minimum_image, Metropolis, energy
     use constant, only : Temperature, Name, sigma, epsilon_, density, Box_dimension, N_part, Proportion
     use constant, only : dr,Restart, simulation_time, Number_of_species, Freq_write
-    use position, only : Label, coord, identity_Label,dimers_interact
-    use mod_function, only : arithmetic_mean, geometric_mean,sort_increasing
+    use position, only : Label, coord, identity_Label, dimers_interact
+    use mod_function, only : arithmetic_mean, geometric_mean, sort_increasing
     use mod_function, only : Lennard_Jones
     implicit none
     double precision:: tmp_numerical
     logical         :: searchB=.FALSE.
     integer         :: i,j
     ! values to test the outputs
-    double precision, dimension(3):: atom_chosen, atom_displaced
-    integer                       :: atom_index 
-    double precision,dimension(2) :: LJ_param_dimer
+    double precision, dimension(3)  :: atom_chosen, atom_displaced
+    integer                         :: atom_index 
+    double precision, dimension(2)  :: LJ_param_dimer
+    ! values to run the simulation
+    double precision :: energy_save, energy_new, energy_old, Delta_E, acceptance_ratio
+    double precision, dimension(:), allocatable :: distances
+    integer :: index, accepted_moves
+    logical :: accept
     !
     ! ******************
     ! Reading the input
@@ -142,32 +147,42 @@ program main_main
     write(*,*) atom_displaced
     write(*,*) Label
     write(*,*) Lennard_Jones(1.0d0,LJ_param_dimer)
-    ! do i = 1, simulation_time
-    !     call random_select( atom, index)                      ! pick an atom at random, and keep track of its position in coord()
-        
-    !     energy_old = energy(cutoff, coord, atom, index)             ! find the starting energy
-        
-    !     call random_displace(atom_identity, atom, move_atom)        ! perturb the position in random directions
-        
-    !     energy_new = energy(cutoff, coord, move_atom, index)        ! find the new energy
-        
-    !     Delta_E = energy_old - energy_new
 
-    !     call Metropolis(Delta_E, T, accept)                         ! use the Metropolis criterion to tell if we accept the new configuration
-    !     if ( accept ) then
-    !         do j = 1, 3
-    !             coord(index, j) = move_atom(j)
-    !         end do
-    !         accepted_moves = accepted_moves + 1
-    !     end if
+    ! MC simulation starts
 
-    !     acceptance_ratio = accepted_moves / i
+    allocate(distances(N_part))
+    do i = 1, simulation_time
+        call random_select(atom_chosen, atom_index)             ! pick an atom at random, and keep track of its position in coord()
+        call minimum_image(atom_chosen, atom_index, distances)      ! calculate the distances with minimum image convention
+        call energy(atom_index, distances, energy_old)                  ! find the starting energy
+        call random_displace(atom_chosen, atom_index, atom_displaced)   ! perturb the position in random directions
+        call minimum_image(atom_displaced, atom_index, distances)       ! recalculuate the distances
+        call energy(atom_index, distances, energy_new)                  ! find the new energy
         
-    !     if ( MOD(i, Freq_write) == 0 ) then
-    !         write_to_output(coord, energy_new, acceptance_ratio)    ! save the configuration, potential energy 
-    !     end if                                                      ! and keep track of how many MC moves we accept/reject
+        Delta_E = energy_old - energy_new
 
-    !     i = i + 1
-    ! end do
-    !
+        call Metropolis(Delta_E, accept)    ! use the Metropolis criterion to tell if we accept the new configuration
+        if ( accept ) then
+            do j = 1, 3
+                coord(index, j) = atom_displaced(j)
+            end do
+            write(*,*) "We have a new potential energy:" 
+            write(*,*) energy_new
+            accepted_moves = accepted_moves + 1
+            energy_save = energy_new
+        else
+            write(*,*) "We keep the old potential energy:" 
+            write(*,*) energy_old
+            energy_save = energy_old
+        end if
+
+        acceptance_ratio = accepted_moves / i
+        
+        if ( MOD(i, Freq_write) == 0 ) then
+            write(*,*) coord                ! save the configuration
+            write(*,*) energy_save          ! save the potential energy
+            write(*,*) acceptance_ratio     ! and keep track of how many MC moves we accept/reject
+        end if
+    end do
+    
 end program main_main

@@ -11,6 +11,7 @@ module constant
     double precision,   allocatable,dimension(:)    :: Proportion
     double precision    :: density=-1.0d0
     double precision    :: dr=0.5 ! Value by default
+    double precision    :: boltzmann = 1.380649E-23
     integer             :: N_part=-1
     integer             :: Restart=0
     integer             :: simulation_time=1 ! Number of MC moves we try
