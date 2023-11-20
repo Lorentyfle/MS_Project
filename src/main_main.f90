@@ -139,39 +139,43 @@ program main_main
     else
         write(*,*) "MC of a LJ fluid."
     end if
-    call pick_dimers_data(1,1,LJ_param_dimer(1),LJ_param_dimer(2))
+    !call pick_dimers_data(1,1,LJ_param_dimer(1),LJ_param_dimer(2))
     !
-    call random_select(atom_chosen,atom_index)
-    call random_displace(atom_chosen,atom_index,atom_displaced)
-    write(*,*) atom_chosen
-    write(*,*) atom_index
-    write(*,*) atom_displaced
-    write(*,*) Label
-    write(*,*) Lennard_Jones(1.0d0,LJ_param_dimer)
+    !call random_select(atom_chosen,atom_index)
+    !call random_displace(atom_chosen,atom_index,atom_displaced)
+    !write(*,*) atom_chosen
+    !write(*,*) atom_index
+    !write(*,*) atom_displaced
+    !write(*,*) Label
+    !write(*,*) Lennard_Jones(1.0d0,LJ_param_dimer)
 
     ! MC simulation starts
 
     allocate(distances(N_part))
     accepted_moves = 0
-    energy_save    = 0.0d0 
+    energy_save    = 0.0d0
     do i = 1, simulation_time
         call random_select(atom_chosen, atom_index)             ! pick an atom at random, and keep track of its position in coord()
         call minimum_image(atom_chosen, atom_index, distances)      ! calculate the distances with minimum image convention
         call energy(atom_index, distances, energy_old)                  ! find the starting energy
-        write(*,*) "Comp E, loop", energy_old, energy_save
+        write(*,*) "distance_old = ", distances
+        write(*,*) "Index =", atom_index
         call random_displace(atom_chosen, atom_index, atom_displaced)   ! perturb the position in random directions
         call minimum_image(atom_displaced, atom_index, distances)       ! recalculuate the distances
         call energy(atom_index, distances, energy_new)                  ! find the new energy
-        
+        write(*,*) "distance_new = ", distances
         Delta_E = energy_old - energy_new
-        write(*,*) "DeltaE = ",Delta_E
-        call Metropolis(Delta_E, accept)    ! use the Metropolis criterion to tell if we accept the new configuration
+        write(*,*) "DeltaE = ",Delta_E, "E_old = ", energy_old, "E_new =", energy_new
+        call Metropolis(Delta_E*10**(3), accept)    ! use the Metropolis criterion to tell if we accept the new configuration
+        ! We use the energy in Joules inside the Metropolis function
+        ! To respect the units.
         if ( accept ) then
             do j = 1, 3
-                coord(index, j) = atom_displaced(j)
+                coord(atom_index, j) = atom_displaced(j)
             end do
             write(*,*) "We have a new potential energy:" 
             write(*,*) energy_new, " kJ/mol"
+            write(*,*) "indexes = ", atom_index
             accepted_moves = accepted_moves + 1
             energy_save = energy_new
         else
@@ -180,14 +184,21 @@ program main_main
             energy_save = energy_old
         end if
 
-        acceptance_ratio = accepted_moves / i
+        !acceptance_ratio = accepted_moves / i
         
         if ( MOD(i, Freq_write) == 0 ) then
+            acceptance_ratio = dble(accepted_moves) / dble(i)
             write(*,*) "Coordinates"
             call write_matrix(coord)                        ! save the configuration
             write(*,*) "E = ",energy_save,"kJ/mol"          ! save the potential energy
             write(*,*) "accept_ratio = ",acceptance_ratio   ! and keep track of how many MC moves we accept/reject
+            write(*,*) "Accept moves = ",accepted_moves
+            write(*,*) "Simulation time =", i,"/",simulation_time
         end if
     end do
-    
+    ! My suspects:
+    ! dr is always to big
+    ! sigma/2 << Box/2 by definition.
+    !
+    ! Oddly enough only two coordinates of the last atom are edited...
 end program main_main

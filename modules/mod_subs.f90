@@ -1036,7 +1036,7 @@ contains
         double precision, intent(in) :: Delta_E
         logical, intent(out) :: accept
 
-        double precision :: probability, Rand, beta, k_B
+        double precision :: probability, Rand, beta
 
         if (Delta_E < 0) then
             accept = .TRUE.
@@ -1070,7 +1070,7 @@ contains
         
         Epot = 0
         do i = 1, N_part
-            if ( distances(i) < dr .and. distances(i) /= 0.0d0 ) then
+            if ( distances(i) < dr .and. distances(i) > 0.0d0 ) then
                 call pick_dimers_data(identity_Label(index), identity_Label(i), LJ_params(1), LJ_params(2))
                 Edimer = Lennard_Jones(distances(i), LJ_params)
             else 
