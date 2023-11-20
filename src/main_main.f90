@@ -4,7 +4,7 @@ program main_main
     use sub, only : load_input, load_input_position, write_input_position, load_input_position_last
     use sub, only : coord_gen, random_atom, DNB, dr_verif, Box_good
     use sub, only : Debug_print, write_matrix
-    use sub, only : sigma_epsilon_dimers, pick_dimers_data
+    use sub, only : sigma_epsilon_dimers, pick_dimers_data, PBC
     use sub, only : random_select, random_displace, minimum_image, Metropolis, energy
     use constant, only : Temperature, Name, sigma, epsilon_, density, Box_dimension, N_part, Proportion
     use constant, only : dr,Restart, simulation_time, Number_of_species, Freq_write
@@ -78,6 +78,8 @@ program main_main
     ! Verification of the box
     call Box_good(searchB)
     call DNB(searchB)
+    ! Organizing the box from lower to higher dimension to be certain everything is regular.
+    call sort_increasing(Box_dimension,Box_dimension)
     !
     ! Verification of dr
     !
@@ -158,14 +160,14 @@ program main_main
         call random_select(atom_chosen, atom_index)             ! pick an atom at random, and keep track of its position in coord()
         call minimum_image(atom_chosen, atom_index, distances)      ! calculate the distances with minimum image convention
         call energy(atom_index, distances, energy_old)                  ! find the starting energy
-        write(*,*) "distance_old = ", distances
-        write(*,*) "Index =", atom_index
+        !write(*,*) "distance_old = ", distances
+        !write(*,*) "Index =", atom_index
         call random_displace(atom_chosen, atom_index, atom_displaced)   ! perturb the position in random directions
         call minimum_image(atom_displaced, atom_index, distances)       ! recalculuate the distances
         call energy(atom_index, distances, energy_new)                  ! find the new energy
-        write(*,*) "distance_new = ", distances
+        !write(*,*) "distance_new = ", distances
         Delta_E = energy_old - energy_new
-        write(*,*) "DeltaE = ",Delta_E, "E_old = ", energy_old, "E_new =", energy_new
+        !write(*,*) "DeltaE = ",Delta_E, "E_old = ", energy_old, "E_new =", energy_new
         call Metropolis(Delta_E*10**(3), accept)    ! use the Metropolis criterion to tell if we accept the new configuration
         ! We use the energy in Joules inside the Metropolis function
         ! To respect the units.
@@ -173,14 +175,15 @@ program main_main
             do j = 1, 3
                 coord(atom_index, j) = atom_displaced(j)
             end do
-            write(*,*) "We have a new potential energy:" 
-            write(*,*) energy_new, " kJ/mol"
-            write(*,*) "indexes = ", atom_index
+            call PBC()
+            !write(*,*) "We have a new potential energy:" 
+            !write(*,*) energy_new, " kJ/mol"
+            !write(*,*) "indexes = ", atom_index
             accepted_moves = accepted_moves + 1
             energy_save = energy_new
         else
-            write(*,*) "We keep the old potential energy:" 
-            write(*,*) energy_old, " kJ/mol"
+            !write(*,*) "We keep the old potential energy:" 
+            !write(*,*) energy_old, " kJ/mol"
             energy_save = energy_old
         end if
 

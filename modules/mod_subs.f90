@@ -909,11 +909,9 @@ contains
         !
         call random_number(Rand)
         index = ceiling(Rand * N_part)
-        write(*,*) index
         do i = 1, 3
             atom(i) = coord(index, i)
         end do
-
     end subroutine random_select
 
     subroutine random_displace(atom_in,index_in,atom_out)
@@ -937,9 +935,7 @@ contains
         end do
         !
         a = sigma(identity_Label(index_in))/2
-        ! Why do you need atom_out? Directly edit coord.
-        ! We do not need atom_in, only the index is necessary.
-        ! Less data that travels, faster it is, easier we can understand it.
+        !
         do i = 1, 3
             atom_out(i) = atom_in(i) + a * Rand(i)
         end do
@@ -1094,4 +1090,22 @@ contains
         !
     end subroutine write_matrix
 
+    subroutine PBC()
+        use position, only : coord, identity_Label
+        use constant, only : Box_dimension
+        !
+        implicit none
+        !
+        integer     :: i,j
+        !
+        do i = 1, size(coord,1)
+            do j = 1, size(coord,2)
+                if ( coord(i,j) > Box_dimension(j) ) then
+                    coord(i,j) = coord(i,j) - Box_dimension(j)
+                elseif (coord(i,j) < 0.0d0) then
+                    coord(i,j) = coord(i,j) + Box_dimension(j)
+                end if
+            end do
+        end do        
+    end subroutine PBC
 end module sub
