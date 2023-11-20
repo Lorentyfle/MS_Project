@@ -1070,7 +1070,7 @@ contains
         
         Epot = 0
         do i = 1, N_part
-            if ( distances(i) < dr ) then
+            if ( distances(i) < dr .and. distances(i) /= 0.0d0 ) then
                 call pick_dimers_data(identity_Label(index), identity_Label(i), LJ_params(1), LJ_params(2))
                 Edimer = Lennard_Jones(distances(i), LJ_params)
             else 
@@ -1080,5 +1080,18 @@ contains
         end do
 
     end subroutine energy
+
+    subroutine write_matrix(matrix)
+        ! Function that will print matrices in double precision
+        ! Only 2D matrices are taken
+        implicit none
+        double precision,dimension(:,:), intent(in) :: matrix
+        integer :: i,j
+        !
+        do i = 1, size(matrix,1)
+            write(*,*) (matrix(i,j), j=1, size(matrix,2))
+        end do
+        !
+    end subroutine write_matrix
 
 end module sub

@@ -3,7 +3,8 @@ program main_main
     ! Coded by T.Jamin.
     use sub, only : load_input, load_input_position, write_input_position, load_input_position_last
     use sub, only : coord_gen, random_atom, DNB, dr_verif, Box_good
-    use sub, only : Debug_print, sigma_epsilon_dimers, pick_dimers_data
+    use sub, only : Debug_print, write_matrix
+    use sub, only : sigma_epsilon_dimers, pick_dimers_data
     use sub, only : random_select, random_displace, minimum_image, Metropolis, energy
     use constant, only : Temperature, Name, sigma, epsilon_, density, Box_dimension, N_part, Proportion
     use constant, only : dr,Restart, simulation_time, Number_of_species, Freq_write
@@ -151,37 +152,41 @@ program main_main
     ! MC simulation starts
 
     allocate(distances(N_part))
+    accepted_moves = 0
+    energy_save    = 0.0d0 
     do i = 1, simulation_time
         call random_select(atom_chosen, atom_index)             ! pick an atom at random, and keep track of its position in coord()
         call minimum_image(atom_chosen, atom_index, distances)      ! calculate the distances with minimum image convention
         call energy(atom_index, distances, energy_old)                  ! find the starting energy
+        write(*,*) "Comp E, loop", energy_old, energy_save
         call random_displace(atom_chosen, atom_index, atom_displaced)   ! perturb the position in random directions
         call minimum_image(atom_displaced, atom_index, distances)       ! recalculuate the distances
         call energy(atom_index, distances, energy_new)                  ! find the new energy
         
         Delta_E = energy_old - energy_new
-
+        write(*,*) "DeltaE = ",Delta_E
         call Metropolis(Delta_E, accept)    ! use the Metropolis criterion to tell if we accept the new configuration
         if ( accept ) then
             do j = 1, 3
                 coord(index, j) = atom_displaced(j)
             end do
             write(*,*) "We have a new potential energy:" 
-            write(*,*) energy_new
+            write(*,*) energy_new, " kJ/mol"
             accepted_moves = accepted_moves + 1
             energy_save = energy_new
         else
             write(*,*) "We keep the old potential energy:" 
-            write(*,*) energy_old
+            write(*,*) energy_old, " kJ/mol"
             energy_save = energy_old
         end if
 
         acceptance_ratio = accepted_moves / i
         
         if ( MOD(i, Freq_write) == 0 ) then
-            write(*,*) coord                ! save the configuration
-            write(*,*) energy_save          ! save the potential energy
-            write(*,*) acceptance_ratio     ! and keep track of how many MC moves we accept/reject
+            write(*,*) "Coordinates"
+            call write_matrix(coord)                        ! save the configuration
+            write(*,*) "E = ",energy_save,"kJ/mol"          ! save the potential energy
+            write(*,*) "accept_ratio = ",acceptance_ratio   ! and keep track of how many MC moves we accept/reject
         end if
     end do
     

@@ -184,7 +184,9 @@ contains
 
         e = LJ_params(1)
         o = LJ_params(2)
-
+        ! e is in kJ/mol
+        ! o is in A
+        ! Edimer is in kJ/mol
         Edimer = 4*e*((o/r)**12 - (o/r)**6)
 
     end function Lennard_Jones
