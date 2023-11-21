@@ -206,5 +206,5 @@ program main_main
             ! In kJ/mol
         end if
     end do
-
+    call write_input_position()
 end program main_main
