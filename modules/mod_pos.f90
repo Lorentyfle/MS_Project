@@ -10,4 +10,6 @@ module position
     double precision,   allocatable,dimension(:,:):: coord          ! Matrix of coordinates (x,y,z).
     double precision,   allocatable,dimension(:,:):: dimers_interact! Matrix of epsilon and sigmas of each dimers type
     ! Here epsilon is first and sigma second.
+    double precision,   allocatable,dimension(:)  :: Energy_loop    ! Vector containing all the energies for all the steps.
+    double precision,   allocatable,dimension(:)  :: Energy_average ! Vector of average energy
 end module position

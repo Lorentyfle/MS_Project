@@ -929,12 +929,12 @@ contains
         do i = 1, 3
             call random_number(Rand(i))
             call random_number(sign(i))
-            if ( sign(i) < 0.5 ) then
+            if ( sign(i) < 0.5d0 ) then
                 Rand(i) = -Rand(i)
             end if
         end do
         !
-        a = sigma(identity_Label(index_in))/2
+        a = sigma(identity_Label(index_in))/2.0d0
         !
         do i = 1, 3
             ! We move the atom

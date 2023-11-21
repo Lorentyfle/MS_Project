@@ -8,7 +8,7 @@ program main_main
     use sub, only : random_select, random_displace, minimum_image, Metropolis, energy
     use constant, only : Temperature, Name, sigma, epsilon_, density, Box_dimension, N_part, Proportion
     use constant, only : dr,Restart, simulation_time, Number_of_species, Freq_write, kJ_mol_to_J
-    use position, only : Label, coord, identity_Label, dimers_interact
+    use position, only : Label, coord, identity_Label, dimers_interact, Energy_loop, Energy_average
     use mod_function, only : arithmetic_mean, geometric_mean, sort_increasing
     use mod_function, only : Lennard_Jones
     implicit none
@@ -154,8 +154,10 @@ program main_main
     ! MC simulation starts
 
     allocate(distances(N_part))
+    allocate(Energy_loop(simulation_time),Energy_average(simulation_time))
     accepted_moves = 0
     energy_save    = 0.0d0
+    Energy_loop    = 0.0d0
     do i = 1, simulation_time
         call random_select(atom_chosen, atom_index)             ! pick an atom at random, and keep track of its position in coord()
         call minimum_image(atom_chosen, atom_index, distances)      ! calculate the distances with minimum image convention
@@ -166,8 +168,8 @@ program main_main
         call minimum_image(atom_displaced, atom_index, distances)       ! recalculuate the distances
         call energy(atom_index, distances, energy_new)                  ! find the new energy
         !write(*,*) "distance_new = ", distances
-        Delta_E = energy_old - energy_new
-        !write(*,*) "DeltaE = ",Delta_E, "E_old = ", energy_old, "E_new =", energy_new
+        Delta_E = energy_new - energy_old
+        write(*,*) "DeltaE = ",Delta_E, "E_old = ", energy_old, "E_new =", energy_new
         call Metropolis(Delta_E*kJ_mol_to_J, accept)    ! use the Metropolis criterion to tell if we accept the new configuration
         ! We use the energy in Joules inside the Metropolis function
         ! To respect the units.
@@ -186,20 +188,23 @@ program main_main
             !write(*,*) energy_old, " kJ/mol"
             energy_save = energy_old
         end if
-
+        Energy_loop(i) = energy_save    ! The saved energy is in kJ/mol
+        Energy_average(i) = sum(Energy_loop)/dble(i)
         !acceptance_ratio = accepted_moves / i
         
         if ( MOD(i, Freq_write) == 0 ) then
             acceptance_ratio = dble(accepted_moves) / dble(i)
-            write(*,*) "Coordinates"
-            call write_matrix(coord)                        ! save the configuration
+            !write(*,*) "Coordinates"
+            !call write_matrix(coord)                        ! save the configuration
             write(*,*) "E = ",energy_save,"kJ/mol"          ! save the potential energy
             write(*,*) "E = ",energy_save*kJ_mol_to_J,"J"
             write(*,*) "accept_ratio = ",acceptance_ratio   ! and keep track of how many MC moves we accept/reject
             write(*,*) "Accept moves = ",accepted_moves
             write(*,*) "Simulation time =", i,"/",simulation_time
+            write(*,"(A16,G14.6,A7)") "<Epot>_{atom} = ", Energy_average(i)," kJ/mol"
             ! Potential E of one atom => AVERAGE value of the potential E of one atom
             ! In kJ/mol
         end if
     end do
+
 end program main_main

@@ -166,7 +166,7 @@ contains
 
         do k = 1, 3
             ij = ri(k) - rj(k)
-            ij = ij(k) - box(k)* dfloat(idint(ij(k)/(dr)))
+            ij = ij(k) - box(k)* dble(idint(ij(k)/(dr)))
         end do
 
         dij_r = dsqrt(ij(1)**2 + ij(2)**2 + ij(3)**2)
