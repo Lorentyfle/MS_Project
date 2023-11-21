@@ -7,7 +7,7 @@ program main_main
     use sub, only : sigma_epsilon_dimers, pick_dimers_data, PBC
     use sub, only : random_select, random_displace, minimum_image, Metropolis, energy
     use constant, only : Temperature, Name, sigma, epsilon_, density, Box_dimension, N_part, Proportion
-    use constant, only : dr,Restart, simulation_time, Number_of_species, Freq_write
+    use constant, only : dr,Restart, simulation_time, Number_of_species, Freq_write, kJ_mol_to_J
     use position, only : Label, coord, identity_Label, dimers_interact
     use mod_function, only : arithmetic_mean, geometric_mean, sort_increasing
     use mod_function, only : Lennard_Jones
@@ -168,7 +168,7 @@ program main_main
         !write(*,*) "distance_new = ", distances
         Delta_E = energy_old - energy_new
         !write(*,*) "DeltaE = ",Delta_E, "E_old = ", energy_old, "E_new =", energy_new
-        call Metropolis(Delta_E*10**(3), accept)    ! use the Metropolis criterion to tell if we accept the new configuration
+        call Metropolis(Delta_E*kJ_mol_to_J, accept)    ! use the Metropolis criterion to tell if we accept the new configuration
         ! We use the energy in Joules inside the Metropolis function
         ! To respect the units.
         if ( accept ) then
@@ -194,14 +194,10 @@ program main_main
             write(*,*) "Coordinates"
             call write_matrix(coord)                        ! save the configuration
             write(*,*) "E = ",energy_save,"kJ/mol"          ! save the potential energy
+            write(*,*) "E = ",energy_save*kJ_mol_to_J,"J"
             write(*,*) "accept_ratio = ",acceptance_ratio   ! and keep track of how many MC moves we accept/reject
             write(*,*) "Accept moves = ",accepted_moves
             write(*,*) "Simulation time =", i,"/",simulation_time
         end if
     end do
-    ! My suspects:
-    ! dr is always to big
-    ! sigma/2 << Box/2 by definition.
-    !
-    ! Oddly enough only two coordinates of the last atom are edited...
 end program main_main
