@@ -71,8 +71,9 @@ program main_main
     ! Box(3) = Box(1)
     ! *********************
     do i = 1, 3
-        if ( (density == -1 .or. N_part == -1) .and. Box_dimension(i) /= -1) then
+        if ( (density == -1 .or. N_part == -1) .and. Box_dimension(i) == -1) then
             write(*,*) "We need at least two parameters"
+            stop
         end if
     end do
     ! Verification of the box
