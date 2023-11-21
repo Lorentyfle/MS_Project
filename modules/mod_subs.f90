@@ -27,7 +27,7 @@ contains
         use constant, only : Name, sigma, epsilon_, Proportion
         use constant, only : N_part, density, Box_dimension
         use constant, only : dr, Restart, simulation_time, Freq_write
-        use constant, only : Number_of_species
+        use constant, only : Number_of_species, displacement
         use mod_function, only : StripSpaces
         use position, only : Label
         implicit none
@@ -36,7 +36,7 @@ contains
         ! ***************
         character(len=24)       :: input_fort       = './input_output/input.txt'
         character(len=1)        :: target_comment = "#"
-        character(len=12)       :: targetList(12)
+        character(len=12)       :: targetList(13)
         character(len=132)      :: line, tmp
         double precision        :: numerical_tmp
         logical                 :: good_line, done, multi_data_verif
@@ -57,6 +57,7 @@ contains
         targetList(10)= "Freq_write ="  ! A frequency.
         targetList(11)= "Restart ="     ! Either 0 or 1.
         targetList(12)= "P ="           ! Have N possible proportions.
+        targetList(13)= "Disp ="        ! What is the value of the displacement.
         !
         dimension_lattice = 0
         !
@@ -308,6 +309,11 @@ contains
                                 sigma(1) = numerical_tmp
                                 exit
                             end if
+                        elseif ( TRIM(line(1:i)) == TRIM(targetList(13))) then
+                            tmp = TRIM(line(i+1:len(line)))
+                            read(tmp,*) numerical_tmp
+                            displacement = numerical_tmp
+                            exit
                             ! We can add more loop if we need to search more datas/variables
                         end if
                         exit
@@ -859,7 +865,7 @@ contains
 
     subroutine Debug_print()
         use constant, only : Temperature, Name, sigma, epsilon_, density, Box_dimension, N_part, Proportion
-        use constant, only : dr,Restart, simulation_time, Number_of_species, Freq_write
+        use constant, only : dr,Restart, simulation_time, Number_of_species, Freq_write,displacement
         use position, only : Label, coord, identity_Label
         use mod_function, only : arithmetic_mean, geometric_mean,sort_increasing
         !
@@ -877,6 +883,7 @@ contains
         write(*,*) Box_dimension
         write(*,*) "d =", density
         write(*,*) "Npart =", N_part
+        write(*,*) "Displacement =", displacement
     end subroutine Debug_print
 
     subroutine dr_verif()
@@ -886,16 +893,64 @@ contains
         implicit none
         double precision, dimension(3) :: Min_Box_dim
 
-        Min_Box_dim = Box_dimension/2
+        Min_Box_dim = Box_dimension/2.0d0
 
         call sort_increasing(Min_Box_dim, Min_Box_dim)
 
-        write(*,*) Min_Box_dim(1)
         if ( dr > Min_Box_dim(1) ) then
             write(*,*) "Cut off too big, the lower one is taken."
+            write(*,*) Min_Box_dim(1)
             dr = Min_Box_dim(1)
         end if
     end subroutine dr_verif
+
+    subroutine verif_DNB()
+        use constant, only : Box_dimension,density,N_part        
+        implicit none
+        !
+        integer     :: missing
+        missing = 0
+        if ( density == -1) then
+            missing = missing + 1
+        end if
+        if ( N_part == -1) then
+            missing = missing + 1
+        end if
+        if ( Box_dimension(1) == -1 .AND. Box_dimension(2) == -1 .AND. Box_dimension(3) == -1) then
+            missing = missing + 1
+        end if 
+        if ( missing == 2 ) then
+            write(*,*) "We need at least two parameters"
+            stop
+        elseif ( missing == 3 ) then
+            write(*,*) "No parameters detected. Check if the input is being read?"
+            stop
+        elseif ( missing == 1 ) then
+            write(*,*) "One parameter is missing. It will be calculated to be consistent with the others."
+        elseif ( missing == 0 ) then
+            write(*,*) "All parameters detected. We will verify they are consistent first."
+        end if
+    end subroutine verif_DNB
+
+    subroutine displacement_verif()
+        use constant, only : displacement, sigma, Number_of_species
+        use mod_function, only : sort_increasing
+        !
+        implicit none
+        double precision, dimension(:), allocatable :: Min_sigma_dim
+        !
+        allocate(Min_sigma_dim(Number_of_species))
+        Min_sigma_dim = sigma/2.0d0
+        !
+        call sort_increasing(Min_sigma_dim,Min_sigma_dim)
+        !
+        if ( displacement <= 0.0d0 .or. displacement > Min_sigma_dim(1) ) then
+            displacement = Min_sigma_dim(1)
+            write(*,*) "Invalid or missing displacement, the displacement taken will be:"
+            write(*,*) displacement
+        end if
+        deallocate(Min_sigma_dim)
+    end subroutine displacement_verif
 
     subroutine random_select(atom, index)
         use constant, only : N_part
@@ -915,7 +970,7 @@ contains
     end subroutine random_select
 
     subroutine random_displace(atom_in,index_in,atom_out)
-        use constant, only : Number_of_species, sigma,Box_dimension
+        use constant, only : Number_of_species, sigma,Box_dimension,displacement
         use position, only : coord,identity_Label
         implicit none
         double precision, dimension(3), intent(in)  :: atom_in
@@ -923,7 +978,6 @@ contains
         double precision, dimension(3), intent(out) :: atom_out
         !
         double precision, dimension(3) :: Rand, sign
-        double precision :: a
         integer :: i,j
         !
         do i = 1, 3
@@ -934,11 +988,9 @@ contains
             end if
         end do
         !
-        a = sigma(identity_Label(index_in))/2.0d0
-        !
         do i = 1, 3
             ! We move the atom
-            atom_out(i) = atom_in(i) + a * Rand(i)
+            atom_out(i) = atom_in(i) + displacement * Rand(i)
             ! We apply PBC
             if ( atom_out(i) > Box_dimension(i) ) then
                 atom_out(i) = atom_out(i) - Box_dimension(i)

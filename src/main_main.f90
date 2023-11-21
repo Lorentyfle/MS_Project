@@ -2,7 +2,7 @@ program main_main
     ! 11/10/2023 : Addition of the squeletton of the main of the program.
     ! Coded by T.Jamin.
     use sub, only : load_input, load_input_position, write_input_position, load_input_position_last
-    use sub, only : coord_gen, random_atom, DNB, dr_verif, Box_good
+    use sub, only : coord_gen, random_atom, DNB, dr_verif, Box_good, displacement_verif,verif_DNB
     use sub, only : Debug_print, write_matrix
     use sub, only : sigma_epsilon_dimers, pick_dimers_data, PBC
     use sub, only : random_select, random_displace, minimum_image, Metropolis, energy
@@ -19,6 +19,8 @@ program main_main
     double precision, dimension(3)  :: atom_chosen, atom_displaced
     integer                         :: atom_index 
     double precision, dimension(2)  :: LJ_param_dimer
+    logical                         :: file_exists
+    character                       :: out_energy='./input_output/out_energy.txt'
     ! values to run the simulation
     double precision :: energy_save, energy_new, energy_old, Delta_E, acceptance_ratio
     double precision, dimension(:), allocatable :: distances
@@ -70,12 +72,7 @@ program main_main
     ! Box(2) = Box(1)
     ! Box(3) = Box(1)
     ! *********************
-    do i = 1, 3
-        if ( (density == -1 .or. N_part == -1) .and. Box_dimension(i) == -1) then
-            write(*,*) "We need at least two parameters"
-            stop
-        end if
-    end do
+    call verif_DNB()
     ! Verification of the box
     call Box_good(searchB)
     call DNB(searchB)
@@ -85,6 +82,10 @@ program main_main
     ! Verification of dr
     !
     call dr_verif()
+    !
+    ! Verification of displacement
+    !
+    call displacement_verif()
     !
     call Debug_print()
     !
@@ -210,7 +211,17 @@ program main_main
             write(*,"(A16,G14.6,A7)") "<Epot>_{atom} = ", Energy_average(i)," kJ/mol"
             ! Potential E of one atom => AVERAGE value of the potential E of one atom
             ! In kJ/mol
+            ! - 5.6 kJ/mol per atom
         end if
     end do
     call write_input_position()
+    if (file_exists) then
+        open(13, file=out_energy, status="old", position="append", action="write")
+    else
+        open(13, file=out_energy, status="new", action="write")
+    end if
+    do i = 1, size(Energy_average,1)
+        write(13,*) i, Energy_average
+    end do
+    close(13)
 end program main_main
