@@ -175,7 +175,7 @@ program main_main
             do j = 1, 3
                 coord(atom_index, j) = atom_displaced(j)
             end do
-            call PBC()
+            !call PBC()
             !write(*,*) "We have a new potential energy:" 
             !write(*,*) energy_new, " kJ/mol"
             !write(*,*) "indexes = ", atom_index
@@ -198,6 +198,8 @@ program main_main
             write(*,*) "accept_ratio = ",acceptance_ratio   ! and keep track of how many MC moves we accept/reject
             write(*,*) "Accept moves = ",accepted_moves
             write(*,*) "Simulation time =", i,"/",simulation_time
+            ! Potential E of one atom => AVERAGE value of the potential E of one atom
+            ! In kJ/mol
         end if
     end do
 end program main_main

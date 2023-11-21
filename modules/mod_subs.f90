@@ -915,7 +915,7 @@ contains
     end subroutine random_select
 
     subroutine random_displace(atom_in,index_in,atom_out)
-        use constant, only : Number_of_species, sigma
+        use constant, only : Number_of_species, sigma,Box_dimension
         use position, only : coord,identity_Label
         implicit none
         double precision, dimension(3), intent(in)  :: atom_in
@@ -937,7 +937,14 @@ contains
         a = sigma(identity_Label(index_in))/2
         !
         do i = 1, 3
+            ! We move the atom
             atom_out(i) = atom_in(i) + a * Rand(i)
+            ! We apply PBC
+            if ( atom_out(i) > Box_dimension(i) ) then
+                atom_out(i) = atom_out(i) - Box_dimension(i)
+            elseif (atom_out(i) < 0.0d0) then
+                atom_out(i) = atom_out(i) + Box_dimension(i)
+            end if
         end do
     end subroutine random_displace
 
@@ -1106,6 +1113,6 @@ contains
                     coord(i,j) = coord(i,j) + Box_dimension(j)
                 end if
             end do
-        end do        
+        end do
     end subroutine PBC
 end module sub
