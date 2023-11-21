@@ -23,7 +23,7 @@ bdimension = 34.7786;34.7786;34.7786;
 dr = 10.0d0
 # Time the simulation should take in MC steps
 # Is 1 by default
-simtime = 1000000
+simtime = 1500000
 # Frequence of writing. How many loops before something is
 # writen inside the output
 Freq_write = 10000
