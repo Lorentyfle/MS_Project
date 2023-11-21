@@ -24,6 +24,8 @@ program main_main
     double precision, dimension(:), allocatable :: distances
     integer :: index, accepted_moves
     logical :: accept
+    ! value to test the inputs
+    integer :: missing
     !
     ! ******************
     ! Reading the input
@@ -70,11 +72,28 @@ program main_main
     ! Box(2) = Box(1)
     ! Box(3) = Box(1)
     ! *********************
-    do i = 1, 3
-        if ( (density == -1 .or. N_part == -1) .and. Box_dimension(i) /= -1) then
-            write(*,*) "We need at least two parameters"
-        end if
-    end do
+    ! Verification of the inputs
+    missing = 0
+    if ( density == -1) then
+        missing = missing + 1
+    end if
+    if ( N_part == -1) then
+        missing = missing + 1
+    end if
+    if ( Box_dimension(1) == -1 AND Box_dimension(2) == -1 AND Box_dimension(3) == -1) then
+        missing = missing + 1
+    end do 
+    if ( missing == 2 ) then
+        write(*,*) "We need at least two parameters"
+        stop
+    elseif ( missing == 3 ) then
+        write(*,*) "No parameters detected. Check if the input is being read?"
+        stop
+    elseif ( missing == 1 ) then
+        write(*,*) "One parameter is missing. It will be calculated to be consistent with the others."
+    elseif ( missing == 0 ) then
+        write(*,*) "All parameters detected. We will verify they are consistent first."
+    end if
     ! Verification of the box
     call Box_good(searchB)
     call DNB(searchB)
