@@ -14,7 +14,7 @@ T = 87.0d0
 # (no unit)
 #density = 1.38d0
 N_part = 864
-#N_part = 3
+#N_part = 5
 #bdimension = 10;10;10;
 # For Ar
 bdimension = 34.7786;34.7786;34.7786;

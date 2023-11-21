@@ -165,12 +165,11 @@ contains
         integer     :: k
 
         do k = 1, 3
-            ij = ri(k) - rj(k)
-            ij = ij(k) - box(k)* dble(idint(ij(k)/(dr)))
+            ij(k) = ri(k) - rj(k)
+            ij(k) = ij(k) - box(k)* dble(idint(ij(k)/(box(k)/2.0d0)))
         end do
 
         dij_r = dsqrt(ij(1)**2 + ij(2)**2 + ij(3)**2)
-        
     end function dij
 
     function Lennard_Jones(r, LJ_params) result(Edimer)

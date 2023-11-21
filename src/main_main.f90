@@ -160,7 +160,12 @@ program main_main
     Energy_loop    = 0.0d0
     do i = 1, simulation_time
         call random_select(atom_chosen, atom_index)             ! pick an atom at random, and keep track of its position in coord()
+        !write(*,*) atom_chosen,atom_index
         call minimum_image(atom_chosen, atom_index, distances)      ! calculate the distances with minimum image convention
+        !write(*,*) "Distances:"
+        !do j = 1, size(distances,1)
+        !    write(*,*) distances(j)
+        !end do
         call energy(atom_index, distances, energy_old)                  ! find the starting energy
         !write(*,*) "distance_old = ", distances
         !write(*,*) "Index =", atom_index
@@ -169,7 +174,7 @@ program main_main
         call energy(atom_index, distances, energy_new)                  ! find the new energy
         !write(*,*) "distance_new = ", distances
         Delta_E = energy_new - energy_old
-        write(*,*) "DeltaE = ",Delta_E, "E_old = ", energy_old, "E_new =", energy_new
+        !write(*,*) "DeltaE = ",Delta_E, "E_old = ", energy_old, "E_new =", energy_new
         call Metropolis(Delta_E*kJ_mol_to_J, accept)    ! use the Metropolis criterion to tell if we accept the new configuration
         ! We use the energy in Joules inside the Metropolis function
         ! To respect the units.

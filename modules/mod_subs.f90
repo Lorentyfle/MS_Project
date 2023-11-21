@@ -1015,7 +1015,7 @@ contains
         implicit none
         integer, intent(in) :: index
         double precision, dimension(3), intent(in) :: atom
-        double precision, dimension(N_part - 1), intent(out) :: distances
+        double precision, dimension(N_part), intent(out) :: distances
 
         double precision, dimension(3) :: neighbor
         integer :: i, j
