@@ -20,7 +20,7 @@ program main_main
     integer                         :: atom_index 
     double precision, dimension(2)  :: LJ_param_dimer
     logical                         :: file_exists
-    character(len=29)                       :: out_energy='./input_output/out_energy.txt'
+    character(len=30)                       :: out_energy='./input_output/out_energy3.txt'
     ! values to run the simulation
     double precision :: energy_save, energy_new, energy_old, Delta_E, acceptance_ratio
     double precision, dimension(:), allocatable :: distances
@@ -204,11 +204,12 @@ program main_main
         Energy_loop(i) = energy_save    ! The saved energy is in kJ/mol
         Energy_average(i) = sum(Energy_loop)/dble(i)
         !acceptance_ratio = accepted_moves / i
-        write(13,*) i, Energy_average(i)/2.0d0
         if ( MOD(i, Freq_write) == 0 ) then
             acceptance_ratio = dble(accepted_moves) / dble(i)
             !write(*,*) "Coordinates"
-            !call write_matrix(coord)                        ! save the configuration
+            !call write_matrix(coord)               ! save the configuration
+            write(13,*) i, Energy_average(i)/2.0d0
+        elseif (MOD(i,Freq_write*10) == 0) then
             write(*,*) "E = ",energy_save,"kJ/mol"          ! save the potential energy
             write(*,*) "E = ",energy_save*kJ_mol_to_J,"J"
             write(*,*) "accept_ratio = ",acceptance_ratio   ! and keep track of how many MC moves we accept/reject

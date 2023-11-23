@@ -42,12 +42,12 @@ contains
 
         ! Initialisation
         size_data = size(datas)
-        Sum_data = 0
+        Sum_data = 0.0d0
         ! Program
         do i = 1, size_data
             Sum_data = Sum_data + datas(i)
         end do
-        mean_value = (Sum_data)/(size_data)
+        mean_value = (Sum_data)/(dble(size_data))
     end subroutine arithmetic_mean
 
     ! If we want to transfert the means from sub to functions
@@ -81,13 +81,13 @@ contains
         integer             :: i
         ! Initialisation
         size_data = size(datas)
-        Prod_data = 1
+        Prod_data = 1.0d0
         ! Program
         do i = 1, size_data
             Prod_data = Prod_data * datas(i)
         end do
         
-        mean_value = (Prod_data)**(1.0d0/size_data)
+        mean_value = (Prod_data)**(1.0d0/dble(size_data))
     end subroutine geometric_mean
 
     subroutine sort_increasing(Input_vector,  Output_vector)
