@@ -190,4 +190,20 @@ contains
 
     end function Lennard_Jones
 
+    function sum_KQ(E_species,KQ) result(sum_data)
+        !
+        implicit none
+        !
+        integer, intent(in) :: KQ
+        double precision,dimension(:,:),intent(in):: E_species
+        double precision :: sum_data
+        integer         :: i
+        !
+        sum_data = 0.0d0
+        do i = 1, size(E_species,1)
+            sum_data = sum_data + E_species(i,KQ)
+        end do
+        !
+    end function sum_KQ
+
 end module mod_function

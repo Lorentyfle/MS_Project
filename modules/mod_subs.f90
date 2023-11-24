@@ -591,6 +591,199 @@ contains
         close(1)
     end subroutine load_input_position_last
 
+    subroutine load_output_log_last(Previous_Energy,Previous_step)
+        use mod_function, only : StripSpaces
+        use constant, only : Number_of_species
+        implicit none
+        double precision, dimension(Number_of_species), intent(out) ::  Previous_Energy
+        integer, dimension(Number_of_species), intent(out) ::  Previous_step
+        !
+        ! Function that will read and output the previous average energy and the previous step.
+        ! This function only works for a restart option.
+        !
+        character(len=29)       :: out_fort       = './input_output/log.txt'
+        character(len=1)        :: target_comment = "#"
+        character(len=20)       :: target_new_sim = "---New_Simulation---"
+        character(len=132)      :: line, tmp
+        logical                 :: done, file_exists
+        integer                 :: new_data,number_new_sim,species_in_question
+        integer                 :: nlines, integer_tmp, stat
+        integer                 :: i,k_jump_line,skip_line,k_new_sim, rank_data,size_line
+        double precision        :: numerical_tmp
+        !
+        ! ***********************
+        ! Find number of species
+        ! **********************
+        !
+        nlines = 0
+        number_new_sim = 0
+        !
+        inquire(file=out_fort, exist=file_exists)
+        if ( .NOT. file_exists ) then
+            write(*,*) "Undetected input file."
+            call create_file(out_fort)
+        end if
+        !
+        ! Read the number of lines
+        !
+        open(1,file=out_fort,position="rewind")
+        !
+        do
+            read(1,*,end=10) line
+            nlines = nlines + 1
+            ! If we want to treat all the previous lines, and not counting the number of commentaries inside the number of lines.
+            ! Uncomment this code.
+            do i=1, len(line)
+                if(line(i:1) == ' ') cycle ! Remove reading blanks
+                if(line(i:1) == target_comment) then  ! Comment line
+                    nlines = nlines - 1
+                    exit
+                elseif (line(i:20) == target_new_sim) then
+                    number_new_sim = number_new_sim + 1
+                end if
+            end do
+        end do
+        10 rewind(1)
+        !
+        ! ************
+        ! Extract data
+        ! ************
+        !
+        done = .false.
+        k_jump_line = 0
+        k_new_sim = 0
+        do while(.NOT. done)
+            read(1, fmt="(a)", iostat=stat) line
+            if(stat<0)then
+                done = .true.
+                exit
+            end if
+            species_in_question = 0
+            size_line = 0
+            new_data  = 0
+            rank_data = 0
+            skip_line = 1
+            ! Test for comments or blank lines
+            do i=1, len(line)
+                !
+                if ( line(i:i) /= " ") then
+                    if ( line(i:21) == "---New_Simulation---" ) then
+                        k_new_sim = k_new_sim + 1
+                    end if
+                    ! Condition to only read the last data block.
+                    if ( .not. k_new_sim .eq. number_new_sim ) then
+                        exit
+                    elseif (k_jump_line <= 1) then  ! We jump the line that write the corresponding datas.
+                        k_jump_line = k_jump_line + 1
+                        exit
+                    end if
+                    !
+                    size_line = size_line + 1
+                    elseif (new_data == rank_data .and. size_line /= 0) then
+                        new_data = new_data + 1
+                    end if
+                if(line(i:i) == target_comment) then  ! Comment line
+                    exit
+                else
+                    tmp = ''
+                    integer_tmp = 0
+                    numerical_tmp = 0.0d0
+                    if(new_data == 1 .and. skip_line <= 1) then
+                        rank_data = rank_data + 1
+                        tmp = TRIM(line(i-size_line:i-1))
+                        call StripSpaces(tmp)
+                        read(tmp,*) integer_tmp
+                        species_in_question = integer_tmp
+                        size_line = 0
+                        skip_line = skip_line + 1
+                    elseif (new_data == 2 .and. skip_line <= 2 ) then
+                        rank_data = rank_data + 1
+                        tmp = TRIM(line(i-size_line:i-1))
+                        call StripSpaces(tmp)
+                        read(tmp,*) integer_tmp
+                        Previous_step(species_in_question) = integer_tmp
+                        size_line = 0
+                        skip_line = skip_line + 1
+                    elseif (new_data == 3 .and. skip_line <= 3 ) then
+                        rank_data = rank_data + 1
+                        tmp = TRIM(line(i-size_line:i-1))
+                        call StripSpaces(tmp)
+                        read(tmp,*) numerical_tmp
+                        Previous_Energy(species_in_question) = numerical_tmp
+                        size_line = 0
+                        skip_line = skip_line + 1
+                    ! We can add more if statements for files with more columns.
+                    end if
+                end if
+            end do
+        end do
+        close(1)
+    end subroutine load_output_log_last
+
+    subroutine write_output_energy_last(Data_vector,begining_sim)
+        ! This function must write the datas as they are computed.
+        ! It will make in sort we will have an output even if the simulation has not ended.
+        use constant, only : Restart
+        implicit none
+        double precision, dimension(:),intent(in) :: Data_vector
+        logical,intent(in)      :: begining_sim
+        character(len=29)       :: out_fort       = './input_output/out_energy.txt'
+        logical                 :: file_exists
+        integer                 :: i
+        !
+        !
+        !
+        inquire(file=out_fort, exist=file_exists)
+        if (file_exists) then
+            open(12, file=out_fort, status="old", position="append", action="write")
+        else
+            open(12, file=out_fort, status="new", action="write")
+            write(12,*) "       Label               Simulation step                 <E_i>                   E_i"
+        end if                                              ! It's entirely possible that another subroutine will be done for it.
+        ! If we have a new simulation appended at the end, add this.
+        if ( Restart /= 1 .and. file_exists .and. begining_sim) then
+            write(12,*) "---New_Simulation---"
+            write(12,*) "       Label               Simulation step                 <E_i>                   E_i"
+        end if
+        ! We now write the datas.
+        write(12,*) Data_vector
+
+    end subroutine write_output_energy_last
+
+    subroutine write_output_log(cKQ,av_Energy_end,begining_sim)
+        use position, only : Label
+        implicit none
+        ! All the inputs needs to have the same dimensions!
+        double precision, dimension(:),intent(in)   :: av_Energy_end
+        integer,dimension(:),intent(in)             :: cKQ
+        logical,intent(in)                          :: begining_sim
+        !
+        character(len=29)       :: out_fort       = './input_output/log.txt'
+        logical                 :: file_exists
+        integer                 :: i
+        !
+        !
+        !
+        inquire(file=out_fort, exist=file_exists)
+        if (file_exists) then
+            open(12, file=out_fort, status="old", position="append", action="write")
+        else
+            open(12, file=out_fort, status="new", action="write")
+            write(12,*) "---New_Simulation---"
+            write(12,*) "Species        rank         <E_i>"
+        end if                                              ! It's entirely possible that another subroutine will be done for it.
+        ! If we have a new simulation appended at the end, add this.
+        if ( begining_sim .and. file_exists ) then
+            write(12,*) "---New_Simulation---"
+            write(12,*) "Species        rank        <E_i>"
+        end if
+        ! We now write the datas.
+        do i = 1, size(av_Energy_end)
+            write(12,*) Label(i),cKQ(i),av_Energy_end(i)
+        end do
+        !
+    end subroutine write_output_log
+
     subroutine write_input_position()
         ! This subroutine wil only take care of writing, watever the data. It will append it at the end of the input/output file.
         use position, only: identity_Label, coord
@@ -605,7 +798,7 @@ contains
             open(12, file=input_fort, status="old", position="append", action="write")
         else
             open(12, file=input_fort, status="new", action="write")
-            write(12,*) "# Label    x    y   z"
+            write(12,*) "#", "Label","x","y","z"
         end if
         do i = 1, size(identity_Label)
             if ( .not. identity_Label(i) == 0 ) then
@@ -629,8 +822,7 @@ contains
             write(*,*) "Error: Unable to create the file."
             stop
         end if
-        write(unit,*) "# Label    x    y   z"
-        write(unit,*) "1;0;0;0;" ! This line will be removed when we will be able to generate coordinates.
+        write(unit,*) "#","Label","x","y","z"
         write(unit,*) "-STOP-"
         write(unit,*)
         close(unit)
