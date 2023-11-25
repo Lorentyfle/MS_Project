@@ -12,6 +12,8 @@ program main_main
     use position, only : Label, coord, identity_Label, dimers_interact, Energy_loop, Energy_average
     use mod_function, only : arithmetic_mean, geometric_mean, sort_increasing
     use mod_function, only : Lennard_Jones,sum_KQ
+    use rdf, only : partial_rdf
+
     implicit none
     double precision:: tmp_numerical
     logical         :: searchB=.FALSE.
