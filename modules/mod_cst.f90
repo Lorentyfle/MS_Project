@@ -12,6 +12,7 @@ module constant
     double precision    :: density=-1.0d0
     double precision    :: dr=0.5 ! Value by default
     double precision    :: boltzmann = 1.380649E-23 ! J/K
+    double precision    :: pi = 4.0d0*ATAN(1.0d0)
     double precision    :: kJ_mol_to_J = 1/(6.02214076E+20)
     integer             :: N_part=-1
     integer             :: Restart=0

@@ -11,6 +11,7 @@ program main_main
     use position, only : Label, coord, identity_Label, dimers_interact
     use mod_function, only : arithmetic_mean, geometric_mean, sort_increasing
     use mod_function, only : Lennard_Jones
+    use rdf, only : partial_rdf
     implicit none
     double precision:: tmp_numerical
     logical         :: searchB=.FALSE.
@@ -80,9 +81,9 @@ program main_main
     if ( N_part == -1) then
         missing = missing + 1
     end if
-    if ( Box_dimension(1) == -1 AND Box_dimension(2) == -1 AND Box_dimension(3) == -1) then
+    if ( Box_dimension(1) == -1 .AND. Box_dimension(2) == -1 .AND. Box_dimension(3) == -1) then
         missing = missing + 1
-    end do 
+    end if
     if ( missing == 2 ) then
         write(*,*) "We need at least two parameters"
         stop
