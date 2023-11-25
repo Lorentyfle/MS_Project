@@ -1,0 +1,16 @@
+ ---New_Simulation---
+ Species        rank        <E_i>
+           1          10 -0.60407820024566028     
+            2       11      -9.000
+ ---New_Simulation---
+ Species        rank        <E_i>
+           1          20 -0.29874022517591403     
+           2          11   0.0000000000000000     
+ ---New_Simulation---
+ Species        rank        <E_i>
+           1          30 -0.20606828711992162     
+           2          11   0.0000000000000000     
+ ---New_Simulation---
+ Species        rank        <E_i>
+           1          40 -0.18744128522492753     
+           2          11   0.0000000000000000     

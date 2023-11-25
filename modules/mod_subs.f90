@@ -27,7 +27,7 @@ contains
         use constant, only : Name, sigma, epsilon_, Proportion
         use constant, only : N_part, density, Box_dimension
         use constant, only : dr, Restart, simulation_time, Freq_write
-        use constant, only : Number_of_species
+        use constant, only : Number_of_species, displacement
         use mod_function, only : StripSpaces
         use position, only : Label
         implicit none
@@ -36,7 +36,7 @@ contains
         ! ***************
         character(len=24)       :: input_fort       = './input_output/input.txt'
         character(len=1)        :: target_comment = "#"
-        character(len=12)       :: targetList(12)
+        character(len=12)       :: targetList(13)
         character(len=132)      :: line, tmp
         double precision        :: numerical_tmp
         logical                 :: good_line, done, multi_data_verif
@@ -57,6 +57,7 @@ contains
         targetList(10)= "Freq_write ="  ! A frequency.
         targetList(11)= "Restart ="     ! Either 0 or 1.
         targetList(12)= "P ="           ! Have N possible proportions.
+        targetList(13)= "Disp ="        ! What is the value of the displacement.
         !
         dimension_lattice = 0
         !
@@ -308,6 +309,11 @@ contains
                                 sigma(1) = numerical_tmp
                                 exit
                             end if
+                        elseif ( TRIM(line(1:i)) == TRIM(targetList(13))) then
+                            tmp = TRIM(line(i+1:len(line)))
+                            read(tmp,*) numerical_tmp
+                            displacement = numerical_tmp
+                            exit
                             ! We can add more loop if we need to search more datas/variables
                         end if
                         exit
@@ -585,6 +591,199 @@ contains
         close(1)
     end subroutine load_input_position_last
 
+    subroutine load_output_log_last(Previous_Energy,Previous_step)
+        use mod_function, only : StripSpaces
+        use constant, only : Number_of_species
+        implicit none
+        double precision, dimension(Number_of_species), intent(out) ::  Previous_Energy
+        integer, dimension(Number_of_species), intent(out) ::  Previous_step
+        !
+        ! Function that will read and output the previous average energy and the previous step.
+        ! This function only works for a restart option.
+        !
+        character(len=29)       :: out_fort       = './input_output/log.txt'
+        character(len=1)        :: target_comment = "#"
+        character(len=20)       :: target_new_sim = "---New_Simulation---"
+        character(len=132)      :: line, tmp
+        logical                 :: done, file_exists
+        integer                 :: new_data,number_new_sim,species_in_question
+        integer                 :: nlines, integer_tmp, stat
+        integer                 :: i,k_jump_line,skip_line,k_new_sim, rank_data,size_line
+        double precision        :: numerical_tmp
+        !
+        ! ***********************
+        ! Find number of species
+        ! **********************
+        !
+        nlines = 0
+        number_new_sim = 0
+        !
+        inquire(file=out_fort, exist=file_exists)
+        if ( .NOT. file_exists ) then
+            write(*,*) "Undetected input file."
+            call create_file(out_fort)
+        end if
+        !
+        ! Read the number of lines
+        !
+        open(1,file=out_fort,position="rewind")
+        !
+        do
+            read(1,*,end=10) line
+            nlines = nlines + 1
+            ! If we want to treat all the previous lines, and not counting the number of commentaries inside the number of lines.
+            ! Uncomment this code.
+            do i=1, len(line)
+                if(line(i:1) == ' ') cycle ! Remove reading blanks
+                if(line(i:1) == target_comment) then  ! Comment line
+                    nlines = nlines - 1
+                    exit
+                elseif (line(i:20) == target_new_sim) then
+                    number_new_sim = number_new_sim + 1
+                end if
+            end do
+        end do
+        10 rewind(1)
+        !
+        ! ************
+        ! Extract data
+        ! ************
+        !
+        done = .false.
+        k_jump_line = 0
+        k_new_sim = 0
+        do while(.NOT. done)
+            read(1, fmt="(a)", iostat=stat) line
+            if(stat<0)then
+                done = .true.
+                exit
+            end if
+            species_in_question = 0
+            size_line = 0
+            new_data  = 0
+            rank_data = 0
+            skip_line = 1
+            ! Test for comments or blank lines
+            do i=1, len(line)
+                !
+                if ( line(i:i) /= " ") then
+                    if ( line(i:21) == "---New_Simulation---" ) then
+                        k_new_sim = k_new_sim + 1
+                    end if
+                    ! Condition to only read the last data block.
+                    if ( .not. k_new_sim .eq. number_new_sim ) then
+                        exit
+                    elseif (k_jump_line <= 1) then  ! We jump the line that write the corresponding datas.
+                        k_jump_line = k_jump_line + 1
+                        exit
+                    end if
+                    !
+                    size_line = size_line + 1
+                    elseif (new_data == rank_data .and. size_line /= 0) then
+                        new_data = new_data + 1
+                    end if
+                if(line(i:i) == target_comment) then  ! Comment line
+                    exit
+                else
+                    tmp = ''
+                    integer_tmp = 0
+                    numerical_tmp = 0.0d0
+                    if(new_data == 1 .and. skip_line <= 1) then
+                        rank_data = rank_data + 1
+                        tmp = TRIM(line(i-size_line:i-1))
+                        call StripSpaces(tmp)
+                        read(tmp,*) integer_tmp
+                        species_in_question = integer_tmp
+                        size_line = 0
+                        skip_line = skip_line + 1
+                    elseif (new_data == 2 .and. skip_line <= 2 ) then
+                        rank_data = rank_data + 1
+                        tmp = TRIM(line(i-size_line:i-1))
+                        call StripSpaces(tmp)
+                        read(tmp,*) integer_tmp
+                        Previous_step(species_in_question) = integer_tmp
+                        size_line = 0
+                        skip_line = skip_line + 1
+                    elseif (new_data == 3 .and. skip_line <= 3 ) then
+                        rank_data = rank_data + 1
+                        tmp = TRIM(line(i-size_line:i-1))
+                        call StripSpaces(tmp)
+                        read(tmp,*) numerical_tmp
+                        Previous_Energy(species_in_question) = numerical_tmp
+                        size_line = 0
+                        skip_line = skip_line + 1
+                    ! We can add more if statements for files with more columns.
+                    end if
+                end if
+            end do
+        end do
+        close(1)
+    end subroutine load_output_log_last
+
+    subroutine write_output_energy_last(Data_vector,begining_sim)
+        ! This function must write the datas as they are computed.
+        ! It will make in sort we will have an output even if the simulation has not ended.
+        use constant, only : Restart
+        implicit none
+        double precision, dimension(:),intent(in) :: Data_vector
+        logical,intent(in)      :: begining_sim
+        character(len=29)       :: out_fort       = './input_output/out_energy.txt'
+        logical                 :: file_exists
+        integer                 :: i
+        !
+        !
+        !
+        inquire(file=out_fort, exist=file_exists)
+        if (file_exists) then
+            open(12, file=out_fort, status="old", position="append", action="write")
+        else
+            open(12, file=out_fort, status="new", action="write")
+            write(12,*) "       Label               Simulation step                 <E_i>                   E_i"
+        end if                                              ! It's entirely possible that another subroutine will be done for it.
+        ! If we have a new simulation appended at the end, add this.
+        if ( Restart /= 1 .and. file_exists .and. begining_sim) then
+            write(12,*) "---New_Simulation---"
+            write(12,*) "       Label               Simulation step                 <E_i>                   E_i"
+        end if
+        ! We now write the datas.
+        write(12,*) Data_vector
+
+    end subroutine write_output_energy_last
+
+    subroutine write_output_log(cKQ,av_Energy_end,begining_sim)
+        use position, only : Label
+        implicit none
+        ! All the inputs needs to have the same dimensions!
+        double precision, dimension(:),intent(in)   :: av_Energy_end
+        integer,dimension(:),intent(in)             :: cKQ
+        logical,intent(in)                          :: begining_sim
+        !
+        character(len=29)       :: out_fort       = './input_output/log.txt'
+        logical                 :: file_exists
+        integer                 :: i
+        !
+        !
+        !
+        inquire(file=out_fort, exist=file_exists)
+        if (file_exists) then
+            open(12, file=out_fort, status="old", position="append", action="write")
+        else
+            open(12, file=out_fort, status="new", action="write")
+            write(12,*) "---New_Simulation---"
+            write(12,*) "Species        rank         <E_i>"
+        end if                                              ! It's entirely possible that another subroutine will be done for it.
+        ! If we have a new simulation appended at the end, add this.
+        if ( begining_sim .and. file_exists ) then
+            write(12,*) "---New_Simulation---"
+            write(12,*) "Species        rank        <E_i>"
+        end if
+        ! We now write the datas.
+        do i = 1, size(av_Energy_end)
+            write(12,*) Label(i),cKQ(i),av_Energy_end(i)
+        end do
+        !
+    end subroutine write_output_log
+
     subroutine write_input_position()
         ! This subroutine wil only take care of writing, watever the data. It will append it at the end of the input/output file.
         use position, only: identity_Label, coord
@@ -599,7 +798,7 @@ contains
             open(12, file=input_fort, status="old", position="append", action="write")
         else
             open(12, file=input_fort, status="new", action="write")
-            write(12,*) "# Label    x    y   z"
+            write(12,*) "#", "Label","x","y","z"
         end if
         do i = 1, size(identity_Label)
             if ( .not. identity_Label(i) == 0 ) then
@@ -623,8 +822,7 @@ contains
             write(*,*) "Error: Unable to create the file."
             stop
         end if
-        write(unit,*) "# Label    x    y   z"
-        write(unit,*) "1;0;0;0;" ! This line will be removed when we will be able to generate coordinates.
+        write(unit,*) "#","Label","x","y","z"
         write(unit,*) "-STOP-"
         write(unit,*)
         close(unit)
@@ -859,7 +1057,7 @@ contains
 
     subroutine Debug_print()
         use constant, only : Temperature, Name, sigma, epsilon_, density, Box_dimension, N_part, Proportion
-        use constant, only : dr,Restart, simulation_time, Number_of_species, Freq_write
+        use constant, only : dr,Restart, simulation_time, Number_of_species, Freq_write,displacement
         use position, only : Label, coord, identity_Label
         use mod_function, only : arithmetic_mean, geometric_mean,sort_increasing
         !
@@ -877,6 +1075,7 @@ contains
         write(*,*) Box_dimension
         write(*,*) "d =", density
         write(*,*) "Npart =", N_part
+        write(*,*) "Displacement =", displacement
     end subroutine Debug_print
 
     subroutine dr_verif()
@@ -886,16 +1085,64 @@ contains
         implicit none
         double precision, dimension(3) :: Min_Box_dim
 
-        Min_Box_dim = Box_dimension/2
+        Min_Box_dim = Box_dimension/2.0d0
 
         call sort_increasing(Min_Box_dim, Min_Box_dim)
 
-        write(*,*) Min_Box_dim(1)
         if ( dr > Min_Box_dim(1) ) then
             write(*,*) "Cut off too big, the lower one is taken."
+            write(*,*) Min_Box_dim(1)
             dr = Min_Box_dim(1)
         end if
     end subroutine dr_verif
+
+    subroutine verif_DNB()
+        use constant, only : Box_dimension,density,N_part        
+        implicit none
+        !
+        integer     :: missing
+        missing = 0
+        if ( density == -1) then
+            missing = missing + 1
+        end if
+        if ( N_part == -1) then
+            missing = missing + 1
+        end if
+        if ( Box_dimension(1) == -1 .AND. Box_dimension(2) == -1 .AND. Box_dimension(3) == -1) then
+            missing = missing + 1
+        end if 
+        if ( missing == 2 ) then
+            write(*,*) "We need at least two parameters"
+            stop
+        elseif ( missing == 3 ) then
+            write(*,*) "No parameters detected. Check if the input is being read?"
+            stop
+        elseif ( missing == 1 ) then
+            write(*,*) "One parameter is missing. It will be calculated to be consistent with the others."
+        elseif ( missing == 0 ) then
+            write(*,*) "All parameters detected. We will verify they are consistent first."
+        end if
+    end subroutine verif_DNB
+
+    subroutine displacement_verif()
+        use constant, only : displacement, sigma, Number_of_species
+        use mod_function, only : sort_increasing
+        !
+        implicit none
+        double precision, dimension(:), allocatable :: Min_sigma_dim
+        !
+        allocate(Min_sigma_dim(Number_of_species))
+        Min_sigma_dim = sigma/2.0d0
+        !
+        call sort_increasing(Min_sigma_dim,Min_sigma_dim)
+        !
+        if ( displacement <= 0.0d0 .or. displacement > Min_sigma_dim(1) ) then
+            displacement = Min_sigma_dim(1)
+            write(*,*) "Invalid or missing displacement, the displacement taken will be:"
+            write(*,*) displacement
+        end if
+        deallocate(Min_sigma_dim)
+    end subroutine displacement_verif
 
     subroutine random_select(atom, index)
         use constant, only : N_part
@@ -915,7 +1162,7 @@ contains
     end subroutine random_select
 
     subroutine random_displace(atom_in,index_in,atom_out)
-        use constant, only : Number_of_species, sigma,Box_dimension
+        use constant, only : Number_of_species, sigma,Box_dimension,displacement
         use position, only : coord,identity_Label
         implicit none
         double precision, dimension(3), intent(in)  :: atom_in
@@ -923,22 +1170,19 @@ contains
         double precision, dimension(3), intent(out) :: atom_out
         !
         double precision, dimension(3) :: Rand, sign
-        double precision :: a
         integer :: i,j
         !
         do i = 1, 3
             call random_number(Rand(i))
             call random_number(sign(i))
-            if ( sign(i) < 0.5 ) then
+            if ( sign(i) < 0.5d0 ) then
                 Rand(i) = -Rand(i)
             end if
         end do
         !
-        a = sigma(identity_Label(index_in))/2
-        !
         do i = 1, 3
             ! We move the atom
-            atom_out(i) = atom_in(i) + a * Rand(i)
+            atom_out(i) = atom_in(i) + displacement * Rand(i)
             ! We apply PBC
             if ( atom_out(i) > Box_dimension(i) ) then
                 atom_out(i) = atom_out(i) - Box_dimension(i)
@@ -1015,7 +1259,7 @@ contains
         implicit none
         integer, intent(in) :: index
         double precision, dimension(3), intent(in) :: atom
-        double precision, dimension(N_part - 1), intent(out) :: distances
+        double precision, dimension(N_part), intent(out) :: distances
 
         double precision, dimension(3) :: neighbor
         integer :: i, j
