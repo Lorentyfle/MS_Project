@@ -10,7 +10,7 @@ program main_main
     use constant, only : dr,Restart, simulation_time, Number_of_species, Freq_write, kJ_mol_to_J
     use position, only : Label, coord, identity_Label, dimers_interact
     use mod_function, only : arithmetic_mean, geometric_mean, sort_increasing
-    use mod_function, only : Lennard_Jones
+    use mod_function, only : Lennard_Jones,sum_KQ
     use rdf, only : partial_rdf
     implicit none
     double precision:: tmp_numerical
@@ -24,9 +24,15 @@ program main_main
     double precision :: energy_save, energy_new, energy_old, Delta_E, acceptance_ratio
     double precision, dimension(:), allocatable :: distances
     integer :: index, accepted_moves
-    logical :: accept
-    ! value to test the inputs
-    integer :: missing
+    logical :: accept,begining_sim=.true.,begining_sim2=.true.
+    integer,dimension(:),allocatable            :: Step_restart     ! number of species already moved from the previous simulation
+    double precision,dimension(:),allocatable   :: Energy_restart   ! value of the energy in function of the species from the previous simulation
+    double precision,dimension(:),allocatable   :: Vector_output    ! Vector of the data to feed to the write_output_energy_last()
+    double precision,dimension(:),allocatable   :: av_E_end         ! Average energy of the species at the end of the simulation
+    double precision,dimension(:,:),allocatable :: av_E             ! Average energy of the species during the simulation.
+    double precision,dimension(:,:),allocatable :: E_species        ! Energy of the species during the simulation
+    integer,dimension(:),allocatable            :: cKQ              ! Counter of the Kind of species in Question
+    integer                                     :: KQ               ! Kind of species in Question
     !
     ! ******************
     ! Reading the input
@@ -73,28 +79,12 @@ program main_main
     ! Box(2) = Box(1)
     ! Box(3) = Box(1)
     ! *********************
-    ! Verification of the inputs
-    missing = 0
-    if ( density == -1) then
-        missing = missing + 1
-    end if
-    if ( N_part == -1) then
-        missing = missing + 1
-    end if
-    if ( Box_dimension(1) == -1 .AND. Box_dimension(2) == -1 .AND. Box_dimension(3) == -1) then
-        missing = missing + 1
-    end if
-    if ( missing == 2 ) then
-        write(*,*) "We need at least two parameters"
-        stop
-    elseif ( missing == 3 ) then
-        write(*,*) "No parameters detected. Check if the input is being read?"
-        stop
-    elseif ( missing == 1 ) then
-        write(*,*) "One parameter is missing. It will be calculated to be consistent with the others."
-    elseif ( missing == 0 ) then
-        write(*,*) "All parameters detected. We will verify they are consistent first."
-    end if
+    ! The use of -1 is non-physical to amplify the fact it's a dummy variable.
+    ! If Npart is equal to -1 we need to compute it with d and Bdim.
+    ! If d is equal to -1 we need to compute it with Npart and Bdim.
+    ! If Bdim have a -1 in the list, we need to compute it with Npart and d.
+    !
+    call verif_DNB()
     ! Verification of the box
     call Box_good(searchB)
     call DNB(searchB)
