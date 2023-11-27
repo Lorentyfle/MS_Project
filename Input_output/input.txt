@@ -13,33 +13,33 @@ T = 87.0d0
 # the size of the box at the same time.
 # (no unit)
 #density = 1.38d0
-#N_part = 864
-N_part = 5
-bdimension = 10;10;10;
+N_part = 864
+#N_part = 5
+#bdimension = 10;10;10;
 # For Ar
-#bdimension = 34.7786;34.7786;34.7786;
+bdimension = 34.7786;34.7786;34.7786;
 # dr (allowed displacement.)
 # Is by default 0.5 or min(Box_dimension)/2
 dr = 10.0d0
 # Time the simulation should take in MC steps
 # Is 1 by default
-simtime = 10
+simtime = 1
 # Frequence of writing. How many loops before something is
 # writen inside the output
 Freq_write = 1
 # Is this a restart?
 # 1 = Yes, 0 = No
-Restart = 1
+Restart = 0
 # Displacement distance (A), the value must be below min(sigma)/2
 Disp = 0.2d0
 # Sigma (A)
-sigma = 3.4d0;1.0d0;
+sigma = 3.4d0;
 # Energy in kJ/mol
-epsilon = 1.0d0;0.5d0;
+epsilon = 1.0d0;
 # Name
-Name = Ar;Ne;
+Name = Ar;
 # Proportion of each compounds
-P = 1;1;
+P = 1;
 # epsilon and sigma should be list of same size as Name
 # DONE
 # Manque nombre de particules en fonction des espèces

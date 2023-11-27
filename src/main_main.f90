@@ -38,6 +38,10 @@ program main_main
     integer,dimension(:),allocatable            :: cKQ              ! Counter of the Kind of species in Question
     integer                                     :: KQ               ! Kind of species in Question
     !
+    ! stuff for the RDF
+    integer :: histogram_boxes
+    double precision, dimension(:,:), allocatable :: g_of_r
+    !
     ! ******************
     ! Reading the input
     ! ******************
@@ -280,4 +284,12 @@ program main_main
         end if
     end do
     call write_input_position()
+    ! calculate the radial distribution function
+    histogram_boxes = 200
+    do i = 1, Number_of_species
+        do j = 1, Number_of_species
+            call partial_rdf(i,j,histogram_boxes,g_of_r)
+            write(*,*) "RDF for particles of type ", i, " with particles of type ", j, " = ", g_of_r
+        end do
+    end do
 end program main_main
