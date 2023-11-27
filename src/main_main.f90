@@ -289,7 +289,8 @@ program main_main
     do i = 1, Number_of_species
         do j = 1, Number_of_species
             call partial_rdf(i,j,histogram_boxes,g_of_r)
-            write(*,*) "RDF for particles of type ", i, " with particles of type ", j, " = ", g_of_r
+            write(*,*) "RDF for particles of type ", i, " with particles of type ", j, " = "
         end do
     end do
+    call write_matrix(g_of_r)
 end program main_main

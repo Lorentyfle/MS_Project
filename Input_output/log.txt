@@ -14,3 +14,90 @@
  Species        rank        <E_i>
            1          40 -0.18744128522492753     
            2          11   0.0000000000000000     
+ ---New_Simulation---
+ Species        rank        <E_i>
+           1           1  -4.8594380291583104     
+ ---New_Simulation---
+ Species        rank        <E_i>
+           1           1  -4.3128951232375465     
+ ---New_Simulation---
+ Species        rank        <E_i>
+           1           1  -4.6650097914218662     
+ ---New_Simulation---
+ Species        rank        <E_i>
+           1           1  -4.0162080824319784     
+ ---New_Simulation---
+ Species        rank        <E_i>
+           1           1  -4.2669600850102354     
+ ---New_Simulation---
+ Species        rank        <E_i>
+           1           1  -4.6600219309171402     
+ ---New_Simulation---
+ Species        rank        <E_i>
+           1           1  -4.6847579172066691     
+ ---New_Simulation---
+ Species        rank        <E_i>
+           1           1  -4.6844658614083494     
+ ---New_Simulation---
+ Species        rank        <E_i>
+           1           1  -2.9384816507946643     
+ ---New_Simulation---
+ Species        rank        <E_i>
+           1           1  -4.4643951210522905     
+ ---New_Simulation---
+ Species        rank        <E_i>
+           1           1  -4.8928131265872459     
+ ---New_Simulation---
+ Species        rank        <E_i>
+           1           1  -4.8894088891164351     
+ ---New_Simulation---
+ Species        rank        <E_i>
+           1           1  -4.6811106261590218     
+ ---New_Simulation---
+ Species        rank        <E_i>
+           1           1  -3.4894223316004793     
+ ---New_Simulation---
+ Species        rank        <E_i>
+           1           1  -2.7320794982321588     
+ ---New_Simulation---
+ Species        rank        <E_i>
+           1           1  -4.2362666665656254     
+ ---New_Simulation---
+ Species        rank        <E_i>
+           1           1  -3.4211368781931082     
+ ---New_Simulation---
+ Species        rank        <E_i>
+           1           1  -4.7401431275224519     
+ ---New_Simulation---
+ Species        rank        <E_i>
+           1           1  -4.8847627092186663     
+ ---New_Simulation---
+ Species        rank        <E_i>
+           1           1  -4.5229327428652155     
+ ---New_Simulation---
+ Species        rank        <E_i>
+           1           1  -4.5494993653525402     
+ ---New_Simulation---
+ Species        rank        <E_i>
+           1           1  -4.8789431013662767     
+ ---New_Simulation---
+ Species        rank        <E_i>
+           1           1  -4.5139986331875512     
+ ---New_Simulation---
+ Species        rank        <E_i>
+           1           1  -4.7646061032515670     
+ ---New_Simulation---
+ Species        rank        <E_i>
+           1           1  -3.3991083578054120     
+ ---New_Simulation---
+ Species        rank        <E_i>
+           1           1  -4.6939817625298597     
+ ---New_Simulation---
+ Species        rank        <E_i>
+           1           1  -3.4897640122074169     
+ ---New_Simulation---
+ Species        rank        <E_i>
+           1           1  -4.4939379720771937     
+ ---New_Simulation---
+ Species        rank        <E_i>
+           1           1  -4.5039566511143443     
