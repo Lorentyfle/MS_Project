@@ -101,3 +101,9 @@
  ---New_Simulation---
  Species        rank        <E_i>
            1           1  -4.5039566511143443     
+ ---New_Simulation---
+ Species        rank        <E_i>
+           1           1  -4.8309461030301328     
+ ---New_Simulation---
+ Species        rank        <E_i>
+           1           2  -4.6189774222561448     

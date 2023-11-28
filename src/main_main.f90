@@ -209,11 +209,13 @@ program main_main
         call load_output_log_last(Energy_restart,Step_restart)
         ! We put the datas inside the specific arrays for the simulation rerun.
         cKQ = Step_restart
-        E_species(simulation_time+1,:) = Energy_restart
+        E_species(simulation_time+1,:) = Energy_restart*Step_restart
+        ! We need to multiply by Step_restart, because it's the Energy we will obtain at the end
+        !
         ! Be careful to see if this way of writing can work.
-        write(*,*) cKQ
-        write(*,*)
-        call write_matrix(E_species)
+        !write(*,*) cKQ
+        !write(*,*)
+        !call write_matrix(E_species)
     end if
     !
     !
@@ -285,12 +287,12 @@ program main_main
     end do
     call write_input_position()
     ! calculate the radial distribution function
-    histogram_boxes = 200
-    do i = 1, Number_of_species
-        do j = 1, Number_of_species
-            call partial_rdf(i,j,histogram_boxes,g_of_r)
-            write(*,*) "RDF for particles of type ", i, " with particles of type ", j, " = "
-        end do
-    end do
-    call write_matrix(g_of_r)
+    !histogram_boxes = 200
+    !do i = 1, Number_of_species
+    !    do j = 1, Number_of_species
+            !call partial_rdf(i,j,histogram_boxes,g_of_r)
+            !write(*,*) "RDF for particles of type ", i, " with particles of type ", j, " = "
+    !    end do
+    !end do
+    !call write_matrix(g_of_r)
 end program main_main

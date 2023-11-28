@@ -29,7 +29,7 @@ simtime = 1
 Freq_write = 1
 # Is this a restart?
 # 1 = Yes, 0 = No
-Restart = 0
+Restart = 1
 # Displacement distance (A), the value must be below min(sigma)/2
 Disp = 0.2d0
 # Sigma (A)
