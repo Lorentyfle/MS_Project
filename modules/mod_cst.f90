@@ -5,7 +5,7 @@ module constant
 
     ! Variables
     double precision    :: Temperature=295.0d0
-    character(len=132), allocatable,dimension(:)    :: Name
+    character(len=4), allocatable,dimension(:)    :: Name
     double precision,   allocatable,dimension(:)    :: sigma
     double precision,   allocatable,dimension(:)    :: epsilon_
     double precision,   allocatable,dimension(:)    :: Proportion
@@ -25,7 +25,13 @@ module constant
     ! If Npart is equal to -1 we need to compute it with d and Bdim.
     ! If d is equal to -1 we need to compute it with Npart and Bdim.
     ! If Bdim have a -1 in the list, we need to compute it with Npart and d.
-
-
+    ! ***********************************************************************
+    !
+    !                           NAMES FOR FILES
+    !
+    ! ***********************************************************************
+    !
+    ! To make in sort the progams work everywhere, with the possibility to have
+    ! Personnalised names for output files.
 
 end module constant

@@ -12,7 +12,7 @@ program main_main
     use position, only : Label, coord, identity_Label, dimers_interact, Energy_loop, Energy_average
     use mod_function, only : arithmetic_mean, geometric_mean, sort_increasing
     use mod_function, only : Lennard_Jones,sum_KQ
-    use rdf, only : partial_rdf
+    use rdf, only : partial_rdf,write_g_of_r
 
     implicit none
     double precision:: tmp_numerical
@@ -287,12 +287,13 @@ program main_main
     end do
     call write_input_position()
     ! calculate the radial distribution function
-    !histogram_boxes = 200
-    !do i = 1, Number_of_species
-    !    do j = 1, Number_of_species
-            !call partial_rdf(i,j,histogram_boxes,g_of_r)
+    histogram_boxes = 200
+    do i = 1, Number_of_species
+        do j = 1, Number_of_species
+            call partial_rdf(i,j,histogram_boxes,g_of_r)
+            call write_g_of_r(i,j,g_of_r)
             !write(*,*) "RDF for particles of type ", i, " with particles of type ", j, " = "
-    !    end do
-    !end do
+        end do
+    end do
     !call write_matrix(g_of_r)
 end program main_main

@@ -40,7 +40,7 @@ contains
                 !
                 call minimum_image(atom_origin, i, rdf_distances)
                 !
-                do j = i, N_part
+                do j = 1, N_part
                     !
                     if ( identity_Label(j) == B ) then
                         do k = 1, precision
@@ -69,7 +69,8 @@ contains
         density_B = dble(total_number_B)/(Box_dimension(1)*Box_dimension(2)*Box_dimension(3))
         Verif = 0.0d0
         write(*,*) "Verif :"
-        do i = 1, precision
+        output_rdf(1,1) = (rmin(1)+rmax(1))/2.0d0 ; output_rdf(1,2) = 0.0d0
+        do i = 2, precision
             output_rdf(i,1) = (rmin(i)+rmax(i))/2.0d0
             output_rdf(i,2) = number_inside_bin(i) / (volume_bin(i)*density_B*dble(total_number_A))
             
@@ -78,4 +79,48 @@ contains
         end do
     
     end subroutine partial_rdf
+
+    subroutine write_g_of_r(A,B,g_of_r)
+        use position, only : Label
+        use constant, only : Name
+        implicit none
+        double precision,dimension(:,:), intent(in) :: g_of_r
+        integer,intent(in)                          :: A,B
+        !
+        character(len=len(Name(Label(A))))    :: Name_A
+        character(len=len(Name(Label(B))))    :: Name_B
+        character(len=34+len(Name_A)+len(Name_B))  :: out_rdf, out_rdf2
+        logical             :: file_exists,file_exists2
+        integer             :: i,j
+        !
+        ! A and B are the integers identity for each RDFs
+        !
+        ! dimensions:       r           g(r)
+        ! The file where the save will be done will have the name of the input used.
+        !
+        ! Initialisation
+        Name_A = Name(Label(A))
+        Name_B = Name(Label(B))
+        !
+        out_rdf = "./input_output/RDF_output/rdf"//Name_A//"-"//Name_B//".dat"
+        out_rdf2 = "./input_output/RDF_output/rdf"//Name_B//"-"//Name_A//".dat"
+        !
+        inquire(file=out_rdf, exist=file_exists)
+        inquire(file=out_rdf2, exist=file_exists2)
+        !
+        if (file_exists) then
+            open(1, file=out_rdf, status="old", position="append", action="write")
+            if ( Name_A /= Name_B .and. file_exists2 ) then
+                go to 2 ! We go to the end of the program
+            end if
+        else
+            open(1, file=out_rdf, status="new", action="write")
+        end if
+        write(1,*) "---New_Simulation---"
+        write(1,*) "    r         g(r)_"//Name_A//"-"//Name_B
+        do i = 1, size(g_of_r,1)
+            write(1,*) (g_of_r(i,j), j=1, size(g_of_r,2))
+        end do
+        2 close(1)
+    end subroutine write_g_of_r
 end module rdf
