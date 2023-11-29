@@ -11,7 +11,7 @@ program main_main
     use constant, only : dr,Restart, simulation_time, Number_of_species, Freq_write, kJ_mol_to_J
     use position, only : Label, coord, identity_Label, dimers_interact, Energy_loop, Energy_average
     use mod_function, only : arithmetic_mean, geometric_mean, sort_increasing
-    use mod_function, only : Lennard_Jones,sum_KQ
+    use mod_function, only : Lennard_Jones,sum_KQ,stop_at_space
     use rdf, only : partial_rdf,write_g_of_r
 
     implicit none
@@ -289,9 +289,9 @@ program main_main
     ! calculate the radial distribution function
     histogram_boxes = 200
     do i = 1, Number_of_species
-        do j = 1, Number_of_species
+        do j = i, Number_of_species
             call partial_rdf(i,j,histogram_boxes,g_of_r)
-            call write_g_of_r(i,j,g_of_r)
+            call write_g_of_r(i,j,g_of_r,stop_at_space(Name(Label(i)),3),stop_at_space(Name(Label(j)),3))
             !write(*,*) "RDF for particles of type ", i, " with particles of type ", j, " = "
         end do
     end do

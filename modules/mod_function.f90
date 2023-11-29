@@ -31,6 +31,42 @@ contains
 
     end subroutine
 
+    function stop_at_space(input_text,option) result(output)
+        implicit none
+        !
+        character(len=*), intent(in)  :: input_text
+        integer,intent(in)            :: option
+        ! /!\ option MUST be in between 1 and 3.
+        ! If the input contain spaces in between words, some characters will not be taken into account.
+        ! This bug is known and will NOT be fixed... 
+        !character(len=3)                     :: output_text
+        integer                       :: i, size_line, max_size, min_size
+        integer                       :: output
+        !
+        size_line = 0
+        max_size  = 0
+        min_size  = 0
+        !
+        do i=1,len(input_text)
+            if ( input_text(i:i) /= " " ) then
+                size_line = size_line + 1
+            else
+                if(size_line == 0) then
+                    min_size = min_size + 1
+                end if
+            end if
+        end do
+        !output_text = input_text(1:max_size+min_size+2)
+        if ( option == 1 ) then
+            output = min_size+1
+        elseif ( option == 2) then
+            max_size = min_size + size_line
+            output = max_size
+        elseif (option == 3) then
+            output = size_line
+        end if
+    end function stop_at_space
+
     subroutine arithmetic_mean(datas,  mean_value)
         ! This subroutine will compute the arithmetic mean difference of a vector of n data.
         implicit none
@@ -140,6 +176,57 @@ contains
         Output_vector = u
         deallocate(u)
     end subroutine sort_increasing
+
+    subroutine sort_decreasing(Input_vector,  Output_vector)
+        implicit none
+        double precision,dimension(:), intent(in) :: Input_vector
+        double precision,dimension(:), intent(out) ::  Output_vector
+        !
+        !Setup
+        !
+        double precision, dimension(:),allocatable  :: u                         ! Set the vector
+        integer                         :: n,i,j,k,s,boucle          ! Rank.
+        integer                         :: x,y                       ! Set variables
+        !
+        !Init
+        !
+        allocate(u(size(Input_vector)))
+        u = Input_vector
+        s = size(u)
+        n = 1
+        k = 0
+        boucle = 0
+        !
+        !Program
+        !
+
+        do while (n < s)
+            x = u(n)
+            y = u(n+1)
+            if ( x < y ) then
+                u(n)    = y
+                u(n+1)  = x
+            end if
+            n = n+1
+            if ( n == s ) then
+                do j = 1, s
+                    if ( u(j)>u(j+1) ) then
+                        k = k+1
+                    end if
+                end do
+                if ( k > 1 ) then
+                    n = 0
+                    k = 0
+                    boucle = boucle + 1
+                end if
+            end if
+        end do
+        !
+        ! Show the result
+        !
+        Output_vector = u
+        deallocate(u)
+    end subroutine sort_decreasing
 
     subroutine IS_ODD(i,j,k,IS_ODD_r)
         integer, intent(in) :: i,j,k

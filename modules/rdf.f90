@@ -68,7 +68,6 @@ contains
 
         density_B = dble(total_number_B)/(Box_dimension(1)*Box_dimension(2)*Box_dimension(3))
         Verif = 0.0d0
-        write(*,*) "Verif :"
         output_rdf(1,1) = (rmin(1)+rmax(1))/2.0d0 ; output_rdf(1,2) = 0.0d0
         do i = 2, precision
             output_rdf(i,1) = (rmin(i)+rmax(i))/2.0d0
@@ -80,16 +79,19 @@ contains
     
     end subroutine partial_rdf
 
-    subroutine write_g_of_r(A,B,g_of_r)
+    subroutine write_g_of_r(A,B,g_of_r,len_A,len_B)
         use position, only : Label
         use constant, only : Name
+        use mod_function, only : stop_at_space
         implicit none
         double precision,dimension(:,:), intent(in) :: g_of_r
-        integer,intent(in)                          :: A,B
+        integer,intent(in)                          :: A,B,len_A,len_B
         !
-        character(len=len(Name(Label(A))))    :: Name_A
-        character(len=len(Name(Label(B))))    :: Name_B
-        character(len=34+len(Name_A)+len(Name_B))  :: out_rdf, out_rdf2
+        integer,dimension(2)     :: size_A
+        integer,dimension(2)     :: size_B
+        character(len=len_A)    :: Name_A
+        character(len=len_B)    :: Name_B
+        character(len=34+len_A+len_B)  :: out_rdf, out_rdf2
         logical             :: file_exists,file_exists2
         integer             :: i,j
         !
@@ -99,8 +101,14 @@ contains
         ! The file where the save will be done will have the name of the input used.
         !
         ! Initialisation
-        Name_A = Name(Label(A))
-        Name_B = Name(Label(B))
+        !
+        do i = 1, 2
+            size_A(i) = stop_at_space(Name(Label(A)),i)
+            size_B(i) = stop_at_space(Name(Label(B)),i)
+        end do
+        !
+        Name_A = Name(Label(A))(size_A(1):size_A(2))
+        Name_B = Name(Label(B))(size_B(1):size_B(2))
         !
         out_rdf = "./input_output/RDF_output/rdf"//Name_A//"-"//Name_B//".dat"
         out_rdf2 = "./input_output/RDF_output/rdf"//Name_B//"-"//Name_A//".dat"
@@ -111,13 +119,13 @@ contains
         if (file_exists) then
             open(1, file=out_rdf, status="old", position="append", action="write")
             if ( Name_A /= Name_B .and. file_exists2 ) then
-                go to 2 ! We go to the end of the program
+                !go to 2 ! We go to the end of the program
             end if
         else
             open(1, file=out_rdf, status="new", action="write")
         end if
         write(1,*) "---New_Simulation---"
-        write(1,*) "    r         g(r)_"//Name_A//"-"//Name_B
+        write(1,*) "    r                   g(r)_"//Name_A//"-"//Name_B
         do i = 1, size(g_of_r,1)
             write(1,*) (g_of_r(i,j), j=1, size(g_of_r,2))
         end do

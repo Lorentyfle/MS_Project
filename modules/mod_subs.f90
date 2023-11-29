@@ -23,12 +23,12 @@ contains
         ! ***********
         ! * Modules *
         ! ***********
-        use constant, only : Temperature
+        use constant, only : Temperature,Higher_size_name
         use constant, only : Name, sigma, epsilon_, Proportion
         use constant, only : N_part, density, Box_dimension
         use constant, only : dr, Restart, simulation_time, Freq_write
         use constant, only : Number_of_species, displacement
-        use mod_function, only : StripSpaces
+        use mod_function, only : StripSpaces!,sort_decreasing
         use position, only : Label
         implicit none
         ! ***************
@@ -40,8 +40,9 @@ contains
         character(len=132)      :: line, tmp
         double precision        :: numerical_tmp
         logical                 :: good_line, done, multi_data_verif
-        integer                 :: i, j, stat,k, integer_tmp
+        integer                 :: i, j,stat,k, integer_tmp
         integer                 :: nlines, input_lines, dimension_lattice
+        integer,dimension(:),allocatable :: biggest_name
         !
         ! Initialisation of the target list
         !
@@ -112,7 +113,8 @@ contains
         ! Allocate the data with respect of the size of the matrix.
         !
         allocate(sigma(Number_of_species),Name(Number_of_species), epsilon_(Number_of_species), Proportion(Number_of_species))
-        allocate(Label(Number_of_species))
+        allocate(Label(Number_of_species),biggest_name(Number_of_species))
+        biggest_name = 0
         !
         ! We put the name of the "Label" which will take number from 1 to infinity which will designate the number linked to
         ! A specific species.
@@ -171,6 +173,7 @@ contains
                                     if ( line(j:j) == ";" ) then
                                         dimension_lattice = dimension_lattice + 1
                                         tmp = TRIM(line(integer_tmp:j-1))
+                                        biggest_name(dimension_lattice) = j - integer_tmp
                                         integer_tmp = j+1
                                         Name(dimension_lattice) = tmp
                                     end if
@@ -323,6 +326,7 @@ contains
             if (good_line) input_lines = input_lines+1
         end do
         close(1)
+        deallocate(biggest_name)
     end subroutine load_input
 
     subroutine load_input_position(allocated_value)
@@ -1067,9 +1071,9 @@ contains
         write(*,*) "T =", Temperature
         write(*,*) "dr =", dr, "Restart =", Restart," Freq_write =", Freq_write,"Simu_time =", simulation_time
         write(*,*) "Nbr_spec =", Number_of_species
-        write(*,*) "Label     sigma       epsilon        Proportion      Name"
+        write(*,*) "Label     sigma       epsilon        Proportion"!      Name"
         do i = 1, Number_of_species
-            write(*,*) Label(i), sigma(i), epsilon_(i), Proportion(i), Name(i)
+            write(*,*) Label(i), sigma(i), epsilon_(i), Proportion(i)!, Name(i)
         end do
         write(*,*) "Box dimension ="
         write(*,*) Box_dimension

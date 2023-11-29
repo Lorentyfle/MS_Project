@@ -5,7 +5,8 @@ module constant
 
     ! Variables
     double precision    :: Temperature=295.0d0
-    character(len=4), allocatable,dimension(:)    :: Name
+    integer             :: Higher_size_name=10
+    character(len=2000), allocatable,dimension(:)   :: Name
     double precision,   allocatable,dimension(:)    :: sigma
     double precision,   allocatable,dimension(:)    :: epsilon_
     double precision,   allocatable,dimension(:)    :: Proportion
