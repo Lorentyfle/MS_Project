@@ -1,0 +1,1 @@
+nohup time ./bin/PCCP_MC_LJ.x > ./Input_output/Shell_log/shell_log.out &
