@@ -1,22 +1,24 @@
-####################################
-#                                  #
-#     Format of the input file     #
-#                                  #
-####################################
+#############################################################
+#                                                           #
+#                 Format of the input file                  #
+#                                                           #
+#############################################################
+#                                                           #
+# If you have multiple datas, separate each data with ;     #
+# AND end your line with ;                                  #
+# To comment a line, use #                                  #
+# You can put the datas in the order you like.              #
+# Name, sigma and epsilon must have the same dimension      #
+#                                                           #
+#############################################################
 #
-# If you have multiple datas, separate each data with ;
-# AND end your line with ;
-# Name, sigma and epsilon must have the same dimension
 # Temperature (K)
 T = 87.0d0
-# Please, do not enter the density (here it's the number density), the number of particles and
-# the size of the box at the same time.
+# Please, do not enter the density (here it's the number density), 
+# the number of particles and the size of the box at the same time.
 # (no unit)
 #density = 1.38d0
-#N_part = 432
 N_part = 864
-#N_part = 5
-#bdimension = 10;10;10;
 # For Ar
 bdimension = 34.7786;34.7786;34.7786;
 # dr (allowed displacement.)
@@ -24,35 +26,21 @@ bdimension = 34.7786;34.7786;34.7786;
 dr = 10.0d0
 # Time the simulation should take in MC steps
 # Is 1 by default
-simtime = 10
+simtime = 10000
 # Frequence of writing. How many loops before something is
 # writen inside the output
-Freq_write = 10
+Freq_write = 10000
 # Is this a restart?
 # 1 = Yes, 0 = No
 Restart = 0
-# Displacement distance (A), the value must be below min(sigma)/2
+# Displacement distance (Angstrom),
+# the value must be below min(sigma)/2
 Disp = 0.2d0
-# Sigma (A)
+# Sigma (Angstrom)
 sigma = 3.4d0;3.4d0;
-# Energy in kJ/mol
+# Epsilon in kJ/mol
 epsilon = 1.0d0;1.0d0;
 # Name
 Name =Ar1;Ar2;
 # Proportion of each compounds
 P = 1;1;
-# epsilon and sigma should be list of same size as Name
-# DONE
-# Manque nombre de particules en fonction des espèces
-# (bdimension + density = nbr part. nbr particule + density = taille boite, maybe nbr particule + taille = densité)
-# DONE
-# nombre de pas pour MC (temps)
-# DONE
-# déplacement maximum (fraction entre 0 et 1)
-# DONE
-# Frequence d'écriture (écriture de la configuration)
-# DONE
-# Need to know if we restart
-# DONE
-# To start from output we will need to average all previous data (for V2)
-# For V2

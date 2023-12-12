@@ -1,7 +1,7 @@
 import os
 import matplotlib.pyplot as plt
 
-directory = './'
+directory = './../Input_output/'
 
 for root, dirs, files in os.walk(directory):
 

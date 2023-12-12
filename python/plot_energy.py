@@ -6,7 +6,7 @@ from scipy.optimize import curve_fit
 #def F(x,a,b,c,d):
 #    return a*cos(b*x + c)*exp(-d*x)
 
-f = open("./Input_output/out_energy.txt","r")
+f = open("./../Input_output/out_energy.txt","r")
 f.readline()
 t             = array([])
 dt            = array([])

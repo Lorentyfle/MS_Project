@@ -8,12 +8,13 @@ program main_main
     use sub, only : sigma_epsilon_dimers, pick_dimers_data, PBC
     use sub, only : random_select, random_displace, minimum_image, Metropolis, energy
     use constant, only : Temperature, Name, sigma, epsilon_, density, Box_dimension, N_part, Proportion
-    use constant, only : dr,Restart, simulation_time, Number_of_species, Freq_write, kJ_mol_to_J
+    use constant, only : dr,Restart, simulation_time, Number_of_species, Freq_write, kJ_mol_to_J,histogram_boxes
+    use constant, only : out_energy
     use position, only : Label, coord, identity_Label, dimers_interact, Energy_loop, Energy_average
     use mod_function, only : arithmetic_mean, geometric_mean, sort_increasing
     use mod_function, only : Lennard_Jones,sum_KQ,stop_at_space
     use rdf, only : partial_rdf,write_g_of_r
-
+    !
     implicit none
     double precision:: tmp_numerical
     logical         :: searchB=.FALSE.
@@ -21,7 +22,6 @@ program main_main
     ! values to test the outputs
     double precision, dimension(2)  :: LJ_param_dimer
     logical                         :: file_exists
-    character(len=30)                       :: out_energy='./input_output/out_energy.txt'
     ! values to run the simulation
     double precision, dimension(3)  :: atom_chosen, atom_displaced
     integer                         :: atom_index
@@ -37,9 +37,9 @@ program main_main
     double precision,dimension(:,:),allocatable :: E_species        ! Energy of the species during the simulation
     integer,dimension(:),allocatable            :: cKQ              ! Counter of the Kind of species in Question
     integer                                     :: KQ               ! Kind of species in Question
+    logical                                     :: Debug            ! To allow the Debug printing.
     !
     ! stuff for the RDF
-    integer :: histogram_boxes
     double precision, dimension(:,:), allocatable :: g_of_r
     !
     ! ******************
@@ -62,10 +62,6 @@ program main_main
             ! But we are not thinking that far yet.
             ! It will allow people to edit a file and give the coordinate they want
             ! To have personnalized starting conditions.
-            write(*,*) "Identity label          x                       y                     z"
-            do j = 1, size(identity_Label)
-                write(*,*) identity_Label(j), coord(j,1),coord(j,2),coord(j,3)
-            end do
             go to 1
         end if
     end do
@@ -97,7 +93,7 @@ program main_main
     call Box_good(searchB)
     call DNB(searchB)
     ! Organizing the box from lower to higher dimension to be certain everything is regular.
-    call sort_increasing(Box_dimension,Box_dimension)
+    1 call sort_increasing(Box_dimension,Box_dimension)
     !
     ! Verification of dr
     !
@@ -136,39 +132,15 @@ program main_main
     ! Monte Carlo of Lennard Jones fluid
     ! ***********************************
     !
-    1 if ( Number_of_species > 1 ) then
-        write(*,*) "LJ of binary fluids"
-        write(*,*) "Normally not available in this version"
-        ! Test functions:
-        !write(*,*) "---TEST FUNCTION---"
-        !call arithmetic_mean(sigma,tmp_numerical)
-        !write(*,*) "Arithmetic mean"
-        !write(*,*) sigma
-        !write(*,*) tmp_numerical
-        !call geometric_mean(epsilon_,tmp_numerical)
-        !write(*,*) "Geometrical mean"
-        !write(*,*) epsilon_
-        !write(*,*) tmp_numerical
-        !call pick_dimers_data(1,1,LJ_param_dimer(1),LJ_param_dimer(2))
-        !write(*,*) LJ_param_dimer
-        !call pick_dimers_data(2,2,LJ_param_dimer(1),LJ_param_dimer(2))
-        !write(*,*) LJ_param_dimer
-        !write(*,*)
-        !do i = 1, size(dimers_interact,1)
-        !    write(*,*) dimers_interact(i,:)
-        !end do
+    if ( Number_of_species == 2 ) then
+        write(*,*) "LJ of binary fluids."
+    elseif (Number_of_species > 2) then
+        write(*,*) "LJ of order ",Number_of_species," fluid."
+        write(*,*) "Yes."
     else
         write(*,*) "MC of a LJ fluid."
     end if
-    !call pick_dimers_data(1,1,LJ_param_dimer(1),LJ_param_dimer(2))
     !
-    !call random_select(atom_chosen,atom_index)
-    !call random_displace(atom_chosen,atom_index,atom_displaced)
-    !write(*,*) atom_chosen
-    !write(*,*) atom_index
-    !write(*,*) atom_displaced
-    !write(*,*) Label
-    !write(*,*) Lennard_Jones(1.0d0,LJ_param_dimer)
     ! *********************
     ! MC simulation starts
     ! *********************
@@ -273,7 +245,7 @@ program main_main
             if ( begining_sim ) then
                 begining_sim = .false.
             end if
-        elseif (MOD(i,Freq_write*2) == 0) then
+        elseif (MOD(i,Freq_write) == 0 .and. Debug) then
             write(*,*) "E = ",energy_save,"kJ/mol"          ! save the potential energy
             write(*,*) "E = ",energy_save*kJ_mol_to_J,"J"
             write(*,*) "accept_ratio = ",acceptance_ratio   ! and keep track of how many MC moves we accept/reject
@@ -287,7 +259,6 @@ program main_main
     end do
     call write_input_position()
     ! calculate the radial distribution function
-    histogram_boxes = 200
     do i = 1, Number_of_species
         do j = i, Number_of_species
             call partial_rdf(i,j,histogram_boxes,g_of_r)
@@ -296,4 +267,7 @@ program main_main
         end do
     end do
     !call write_matrix(g_of_r)
+    write(*,*) "Ludwig Boltzmann, who spent much of his life studying statistical mechanics, died in 1906,", &
+    "by his own hand. Paul Ehrenfest, carrying on the work, died similarly in 1933. Now it is our turn to study", &
+    "statistical mechanics. - David L. Goodstein"
 end program main_main
