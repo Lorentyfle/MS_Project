@@ -28,13 +28,13 @@ contains
         use constant, only : N_part, density, Box_dimension
         use constant, only : dr, Restart, simulation_time, Freq_write
         use constant, only : Number_of_species, displacement
+        use constant, only : input_fort
         use mod_function, only : StripSpaces!,sort_decreasing
         use position, only : Label
         implicit none
         ! ***************
         ! * Declaration *
         ! ***************
-        character(len=24)       :: input_fort       = './input_output/input.txt'
         character(len=1)        :: target_comment = "#"
         character(len=12)       :: targetList(13)
         character(len=132)      :: line, tmp
@@ -330,7 +330,8 @@ contains
     end subroutine load_input
 
     subroutine load_input_position(allocated_value)
-        use position, only: identity_Label, coord
+        use constant, only : input_posit
+        use position, only : identity_Label, coord
         use mod_function, only : StripSpaces
         implicit none
         !
@@ -342,7 +343,6 @@ contains
         ! This function will only read the FIRST position
         !
         logical, intent(in)     :: allocated_value ! Do we need to allocate the Label and coord?
-        character(len=30)       :: input_fort       = './input_output/io_pos_opti.txt'
         character(len=1)        :: target_comment = "#"
         character(len=132)      :: line, tmp
         logical                 :: done, file_exists
@@ -358,13 +358,13 @@ contains
         tmp = ''
         done = .false.
         k = 0
-        inquire(file=input_fort, exist=file_exists)
+        inquire(file=input_posit, exist=file_exists)
         if ( .NOT. file_exists ) then
             write(*,*) "Undetected input file."
-            call create_file(input_fort)
+            call create_file(input_posit)
         end if
 
-        open(1,file=input_fort,position="rewind")
+        open(1,file=input_posit,position="rewind")
         !
         nlines = 0
         do
@@ -444,7 +444,8 @@ contains
     end subroutine load_input_position
 
     subroutine load_input_position_last(allocated_value)
-        use position, only: identity_Label, coord
+        use constant, only : input_posit
+        use position, only : identity_Label, coord
         use mod_function, only : StripSpaces
         implicit none
         !
@@ -456,7 +457,6 @@ contains
         ! This function will only read the LAST position
         !
         logical, intent(in)     :: allocated_value ! Do we need to allocate the Label and coord?
-        character(len=30)       :: input_fort       = './input_output/io_pos_opti.txt'
         character(len=1)        :: target_comment = "#"
         character(len=132)      :: line, tmp
         logical                 :: done, file_exists
@@ -472,13 +472,13 @@ contains
         tmp = ''
         done = .false.
         k = 0
-        inquire(file=input_fort, exist=file_exists)
+        inquire(file=input_posit, exist=file_exists)
         if ( .NOT. file_exists ) then
             write(*,*) "Undetected input file."
-            call create_file(input_fort)
+            call create_file(input_posit)
         end if
         !
-        open(1,file=input_fort,position="rewind")
+        open(1,file=input_posit,position="rewind")
         !
         nlines = 0
         ! We count the number of loop done.
@@ -598,6 +598,7 @@ contains
     subroutine load_output_log_last(Previous_Energy,Previous_step)
         use mod_function, only : StripSpaces
         use constant, only : Number_of_species
+        use constant, only : out_log
         implicit none
         double precision, dimension(Number_of_species), intent(out) ::  Previous_Energy
         integer, dimension(Number_of_species), intent(out) ::  Previous_step
@@ -605,7 +606,6 @@ contains
         ! Function that will read and output the previous average energy and the previous step.
         ! This function only works for a restart option.
         !
-        character(len=29)       :: out_fort       = './input_output/log.txt'
         character(len=1)        :: target_comment = "#"
         character(len=20)       :: target_new_sim = "---New_Simulation---"
         character(len=132)      :: line, tmp
@@ -622,15 +622,15 @@ contains
         nlines = 0
         number_new_sim = 0
         !
-        inquire(file=out_fort, exist=file_exists)
+        inquire(file=out_log, exist=file_exists)
         if ( .NOT. file_exists ) then
             write(*,*) "Undetected input file."
-            call create_file(out_fort)
+            call create_file(out_log)
         end if
         !
         ! Read the number of lines
         !
-        open(1,file=out_fort,position="rewind")
+        open(1,file=out_log,position="rewind")
         !
         do
             read(1,*,end=10) line
@@ -728,20 +728,20 @@ contains
         ! This function must write the datas as they are computed.
         ! It will make in sort we will have an output even if the simulation has not ended.
         use constant, only : Restart
+        use constant, only : out_energy
         implicit none
         double precision, dimension(:),intent(in) :: Data_vector
         logical,intent(in)      :: begining_sim
-        character(len=29)       :: out_fort       = './input_output/out_energy.txt'
         logical                 :: file_exists
         integer                 :: i
         !
         !
         !
-        inquire(file=out_fort, exist=file_exists)
+        inquire(file=out_energy, exist=file_exists)
         if (file_exists) then
-            open(12, file=out_fort, status="old", position="append", action="write")
+            open(12, file=out_energy, status="old", position="append", action="write")
         else
-            open(12, file=out_fort, status="new", action="write")
+            open(12, file=out_energy, status="new", action="write")
             write(12,*) "       Label               Simulation step                 <E_i>                   E_i"
         end if                                              ! It's entirely possible that another subroutine will be done for it.
         ! If we have a new simulation appended at the end, add this.
@@ -756,23 +756,23 @@ contains
 
     subroutine write_output_log(cKQ,av_Energy_end,begining_sim)
         use position, only : Label
+        use constant, only : out_log
         implicit none
         ! All the inputs needs to have the same dimensions!
         double precision, dimension(:),intent(in)   :: av_Energy_end
         integer,dimension(:),intent(in)             :: cKQ
         logical,intent(in)                          :: begining_sim
         !
-        character(len=29)       :: out_fort       = './input_output/log.txt'
         logical                 :: file_exists
         integer                 :: i
         !
         !
         !
-        inquire(file=out_fort, exist=file_exists)
+        inquire(file=out_log, exist=file_exists)
         if (file_exists) then
-            open(12, file=out_fort, status="old", position="append", action="write")
+            open(12, file=out_log, status="old", position="append", action="write")
         else
-            open(12, file=out_fort, status="new", action="write")
+            open(12, file=out_log, status="new", action="write")
             write(12,*) "---New_Simulation---"
             write(12,*) "Species        rank         <E_i>"
         end if                                              ! It's entirely possible that another subroutine will be done for it.
@@ -790,18 +790,18 @@ contains
 
     subroutine write_input_position()
         ! This subroutine wil only take care of writing, watever the data. It will append it at the end of the input/output file.
-        use position, only: identity_Label, coord
+        use position, only : identity_Label, coord
+        use constant, only : input_posit
         implicit none
-        character(len=30)       :: input_fort       = './input_output/io_pos_opti.txt'
         logical                 :: file_exists
         integer                 :: i
         !
         ! Verification that the file exist
-        inquire(file=input_fort, exist=file_exists)
+        inquire(file=input_posit, exist=file_exists)
         if (file_exists) then
-            open(12, file=input_fort, status="old", position="append", action="write")
+            open(12, file=input_posit, status="old", position="append", action="write")
         else
-            open(12, file=input_fort, status="new", action="write")
+            open(12, file=input_posit, status="new", action="write")
             write(12,*) "#", "Label","x","y","z"
         end if
         do i = 1, size(identity_Label)
@@ -826,7 +826,7 @@ contains
             write(*,*) "Error: Unable to create the file."
             stop
         end if
-        write(unit,*) "#","Label","x","y","z"
+        write(unit,*) "# Label           x                           y                          z"
         write(unit,*) "-STOP-"
         write(unit,*)
         close(unit)
@@ -1067,7 +1067,8 @@ contains
         !
         implicit none
         integer     :: i,j
-        
+        !
+        write(*,*) "Here is the entirety of the input entered:"
         write(*,*) "T =", Temperature
         write(*,*) "dr =", dr, "Restart =", Restart," Freq_write =", Freq_write,"Simu_time =", simulation_time
         write(*,*) "Nbr_spec =", Number_of_species

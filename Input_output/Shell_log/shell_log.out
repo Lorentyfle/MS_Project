@@ -1,0 +1,16 @@
+ One parameter is missing. It will be calculated to be consistent with the others.
+ T =   87.000000000000000     
+ dr =   10.000000000000000      Restart =           0  Freq_write =       10000 Simu_time =       10000
+ Nbr_spec =           2
+ Label     sigma       epsilon        Proportion
+           1   3.3999999999999999        1.0000000000000000        1.0000000000000000     
+           2   3.3999999999999999        1.0000000000000000        1.0000000000000000     
+ Box dimension =
+   34.778599999999997        34.778599999999997        34.778599999999997     
+ d =   2.0538913010776736E-002
+ Npart =         864
+ Displacement =  0.20000000000000001     
+ LJ of binary fluids
+ Normally not available in this version
+0.00user 0.01system 0:02.31elapsed 0%CPU (0avgtext+0avgdata 4748maxresident)k
+0inputs+0outputs (1246major+0minor)pagefaults 0swaps

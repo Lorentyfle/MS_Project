@@ -22,6 +22,7 @@ module constant
     double precision, dimension(3):: Box_dimension=[-1.0d0,-1.0d0,-1.0d0]
     integer             :: Number_of_species=1
     double precision    :: displacement=-1.0d0
+    integer             :: histogram_boxes=200
     ! The use of -1 is non-physical to amplify the fact it's a dummy variable.
     ! If Npart is equal to -1 we need to compute it with d and Bdim.
     ! If d is equal to -1 we need to compute it with Npart and Bdim.
@@ -34,5 +35,12 @@ module constant
     !
     ! To make in sort the progams work everywhere, with the possibility to have
     ! Personnalised names for output files.
-
+    ! Input file
+    character(len=24)       :: input_fort       = './input_output/input.txt'
+    ! Output/input position
+    character(len=30)       :: input_posit      = './input_output/io_pos_opti.txt'
+    ! Output_energy
+    character(len=30)       :: out_energy       ='./input_output/out_energy.txt'
+    ! Output_log
+    character(len=29)       :: out_log          = './input_output/log.txt'
 end module constant
