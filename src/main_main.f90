@@ -1,19 +1,19 @@
 program main_main
-    ! 11/10/2023 : Addition of the squeletton of the main of the program.
+    ! 11/10/2023 : Addition of the skeleton of the main code of the program.
     ! Coded by T.Jamin.
     use sub, only : load_input, load_input_position, write_input_position, load_input_position_last
-    use sub, only : coord_gen, random_atom, DNB, dr_verif, Box_good, displacement_verif,verif_DNB
+    use sub, only : coord_gen, random_atom, DNB, dr_verif, Box_good, displacement_verif, verif_DNB
     use sub, only : Debug_print, write_matrix
-    use sub, only : load_output_log_last,write_output_log,write_output_energy_last
+    use sub, only : load_output_log_last, write_output_log, write_output_energy_last
     use sub, only : sigma_epsilon_dimers, pick_dimers_data, PBC
     use sub, only : random_select, random_displace, minimum_image, Metropolis, energy
     use constant, only : Temperature, Name, sigma, epsilon_, density, Box_dimension, N_part, Proportion
-    use constant, only : dr,Restart, simulation_time, Number_of_species, Freq_write, kJ_mol_to_J,histogram_boxes
+    use constant, only : dr, Restart, simulation_time, Number_of_species, Freq_write, kJ_mol_to_J, histogram_boxes
     use constant, only : out_energy
     use position, only : Label, coord, identity_Label, dimers_interact, Energy_loop, Energy_average
     use mod_function, only : arithmetic_mean, geometric_mean, sort_increasing
-    use mod_function, only : Lennard_Jones,sum_KQ,stop_at_space
-    use rdf, only : partial_rdf,write_g_of_r
+    use mod_function, only : Lennard_Jones, sum_KQ, stop_at_space
+    use rdf, only : partial_rdf, write_g_of_r
     !
     implicit none
     double precision:: tmp_numerical
@@ -28,7 +28,7 @@ program main_main
     double precision :: energy_save, energy_new, energy_old, Delta_E, acceptance_ratio
     double precision, dimension(:), allocatable :: distances
     integer :: index, accepted_moves
-    logical :: accept,begining_sim=.true.,begining_sim2=.true.
+    logical :: accept, begining_sim=.true., begining_sim2=.true.
     integer,dimension(:),allocatable            :: Step_restart     ! number of species already moved from the previous simulation
     double precision,dimension(:),allocatable   :: Energy_restart   ! value of the energy in function of the species from the previous simulation
     double precision,dimension(:),allocatable   :: Vector_output    ! Vector of the data to feed to the write_output_energy_last()
@@ -82,11 +82,11 @@ program main_main
     ! We suppose the box to be a cube
     ! Box(2) = Box(1)
     ! Box(3) = Box(1)
-    ! *********************
+    ! ***********************
     ! The use of -1 is non-physical to amplify the fact it's a dummy variable.
-    ! If Npart is equal to -1 we need to compute it with d and Bdim.
-    ! If d is equal to -1 we need to compute it with Npart and Bdim.
-    ! If Bdim have a -1 in the list, we need to compute it with Npart and d.
+    ! If N_part is equal to -1 we need to compute it with d and Bdim.
+    ! If d is equal to -1 we need to compute it with N_part and Bdim.
+    ! If Bdim have a -1 in the list, we need to compute it with N_part and d.
     !
     call verif_DNB()
     ! Verification of the box
@@ -116,27 +116,26 @@ program main_main
         call write_input_position()
     end if
     !
-    !
     if ( allocated(coord) .or. allocated(identity_Label) ) then
         deallocate(coord,identity_Label)
     end if
     call load_input_position_last(.true.)
     !
-    !do i = 1, size(coord,1)
-    !        write(*,*) coord(i,:)
-    !end do
-    !write(*,*) identity_Label
-    !
+    ! Print the starting position if you want to see it.
+    ! do i = 1, size(coord,1)
+    !         write(*,*) coord(i,:)
+    ! end do
+    ! write(*,*) identity_Label
     !
     ! ***********************************
-    ! Monte Carlo of Lennard Jones fluid
+    ! Monte Carlo of Lennard-Jones fluid
     ! ***********************************
     !
     if ( Number_of_species == 2 ) then
-        write(*,*) "LJ of binary fluids."
+        write(*,*) "LJ of binary mixture."
     elseif (Number_of_species > 2) then
-        write(*,*) "LJ of order ",Number_of_species," fluid."
-        write(*,*) "Yes."
+        write(*,*) "LJ of mixture of ",Number_of_species," fluids."
+        write(*,*) "Yes. We are that crazy."
     else
         write(*,*) "MC of a LJ fluid."
     end if
@@ -144,17 +143,17 @@ program main_main
     ! *********************
     ! MC simulation starts
     ! *********************
-    ! Allocation variables
+    ! Allocation of variables
     allocate(distances(N_part))
     allocate(Energy_loop(simulation_time),Energy_average(simulation_time))
-    allocate(Vector_output(4))  ! For now we put 3 because we have 3 outputs.
+    allocate(Vector_output(4))  ! For now we put 4 because we have 4 outputs: species, step, E_avg, E
     allocate(Step_restart(Number_of_species),Energy_restart(Number_of_species))
     allocate(av_E(simulation_time,Number_of_species))
     allocate(av_E_end(Number_of_species))
     allocate(cKQ(Number_of_species))
     !
     if ( Restart == 1 ) then
-        ! We restart
+        ! We restart from a previous simulation
         allocate(E_species(simulation_time+1,Number_of_species))
         ! Here we add one more room for taking the previous calculations
         ! /!\ We need to not feed into Data_vector() Energy at simulation_time+1
@@ -162,9 +161,11 @@ program main_main
         ! We do not restart
         allocate(E_species(simulation_time,Number_of_species))
     end if
+    !
     ! *********************************
     ! Initialisation of the variables.
     ! *********************************
+    !
     accepted_moves = 0
     KQ             = 0
     cKQ            = 0
@@ -185,14 +186,12 @@ program main_main
         ! We need to multiply by Step_restart, because it's the Energy we will obtain at the end
         !
         ! Be careful to see if this way of writing can work.
-        !write(*,*) cKQ
-        !write(*,*)
-        !call write_matrix(E_species)
+        ! write(*,*) cKQ
+        ! write(*,*)
+        ! call write_matrix(E_species)
     end if
     !
-    !
     do i = 1, simulation_time
-        ! MC() => energy_save, atom_index
         call random_select(atom_chosen, atom_index)             ! pick an atom at random, and keep track of its position in coord()
         call minimum_image(atom_chosen, atom_index, distances)      ! calculate the distances with minimum image convention
         call energy(atom_index, distances, energy_old)                  ! find the starting energy
@@ -203,13 +202,13 @@ program main_main
         call Metropolis(Delta_E*kJ_mol_to_J, accept)    ! use the Metropolis criterion to tell if we accept the new configuration
         ! We use the energy in Joules inside the Metropolis function
         ! To respect the units.
-        if ( accept ) then
+        if ( accept ) then  ! save the new position and energy
             do j = 1, 3
                 coord(atom_index, j) = atom_displaced(j)
             end do
             accepted_moves = accepted_moves + 1
             energy_save = energy_new
-        else
+        else                ! or don't save it
             energy_save = energy_old
         end if
         !
@@ -218,25 +217,24 @@ program main_main
         KQ = identity_Label(atom_index)
         cKQ(KQ) = cKQ(KQ) + 1
         E_species(i,KQ) = energy_save/2.0d0 ! We divide the energy by two because the interactions are counted twice!
-        av_E(i,KQ) = sum_KQ(E_species,KQ)/cKQ(KQ)
+        av_E(i,KQ) = sum_KQ(E_species,KQ)/cKQ(KQ)   ! We are interested in the average of all accepted energies
         av_E_end(KQ) = av_E(i,KQ)
-        ! Old energy calculation
-        !Energy_loop(i) = energy_save    ! The saved energy is in kJ/mol
-        !Energy_average(i) = sum(Energy_loop)/dble(i)
-        !acceptance_ratio = accepted_moves / i
+        !
         if ( MOD(i, Freq_write) == 0 ) then
             acceptance_ratio = dble(accepted_moves) / dble(i)
             ! The acceptance will be taken into account in the restart for the next update.
-            !write(*,*) "Coordinates"
-            !call write_matrix(coord)               ! save the configuration
+            ! write(*,*) "Coordinates"
+            ! call write_matrix(coord)            ! save the configuration (NOT recommended to do this every step. You will run out of space)
+            !
             ! ***********************************************************
             ! Initialisation of the Vector_output() for saving the datas.
             ! ***********************************************************
+            !
             Vector_output(1) = KQ                 ! Label_species
             Vector_output(2) = sum(cKQ)           ! Simulation step
             Vector_output(3) = av_E(i,KQ)         ! <E_i>_species
             Vector_output(4) = E_species(i,KQ)    ! E_i_species
-            ! **************************
+            ! 
             call write_output_energy_last(Vector_output,begining_sim)
             if ( i == simulation_time ) then
                 call write_output_log(cKQ,av_E_end,begining_sim2)
@@ -254,19 +252,25 @@ program main_main
             write(*,"(A16,G14.6,A7)") "<Epot>_{atom} = ", Energy_average(i)," kJ/mol"
             ! Potential E of one atom => AVERAGE value of the potential E of one atom
             ! In kJ/mol
-            ! - 5.6 kJ/mol per atom
+            ! -5.6 kJ/mol per atom for Argon at 87 K according to Rahman
         end if
     end do
-    call write_input_position()
-    ! calculate the radial distribution function
+    !
+    call write_input_position() ! we save the position for use in the next simulation
+    !
+    ! ******************************
+    ! Radial Distribution Functions
+    ! ******************************
+    !
     do i = 1, Number_of_species
         do j = i, Number_of_species
             call partial_rdf(i,j,histogram_boxes,g_of_r)
             call write_g_of_r(i,j,g_of_r,stop_at_space(Name(Label(i)),3),stop_at_space(Name(Label(j)),3))
-            !write(*,*) "RDF for particles of type ", i, " with particles of type ", j, " = "
+            ! write(*,*) "RDF for particles of type ", i, " with particles of type ", j, " = "
+            ! call write_matrix(g_of_r)
         end do
     end do
-    !call write_matrix(g_of_r)
+    !
     write(*,*) "Ludwig Boltzmann, who spent much of his life studying statistical mechanics, died in 1906,", &
     "by his own hand. Paul Ehrenfest, carrying on the work, died similarly in 1933. Now it is our turn to study", &
     "statistical mechanics. - David L. Goodstein"

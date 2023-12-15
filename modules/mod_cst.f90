@@ -1,8 +1,8 @@
 module constant
     implicit none
-    
+    !
     save
-
+    !
     ! Variables
     double precision    :: Temperature=295.0d0
     integer             :: Higher_size_name=10
@@ -24,23 +24,25 @@ module constant
     double precision    :: displacement=-1.0d0
     integer             :: histogram_boxes=200
     ! The use of -1 is non-physical to amplify the fact it's a dummy variable.
-    ! If Npart is equal to -1 we need to compute it with d and Bdim.
-    ! If d is equal to -1 we need to compute it with Npart and Bdim.
-    ! If Bdim have a -1 in the list, we need to compute it with Npart and d.
+    ! If N_part is equal to -1 we need to compute it with d and Bdim.
+    ! If d is equal to -1 we need to compute it with N_part and Bdim.
+    ! If Bdim have a -1 in the list, we need to compute it with N_part and d.
+    !
     ! ***********************************************************************
     !
     !                           NAMES FOR FILES
     !
     ! ***********************************************************************
     !
-    ! To make in sort the progams work everywhere, with the possibility to have
+    ! To make it so the progams work everywhere, with the possibility to have
     ! Personnalised names for output files.
+    !
     ! Input file
     character(len=24)       :: input_fort       = './input_output/input.txt'
     ! Output/input position
     character(len=30)       :: input_posit      = './input_output/io_pos_opti.txt'
     ! Output_energy
-    character(len=30)       :: out_energy       ='./input_output/out_energy.txt'
+    character(len=30)       :: out_energy       = './input_output/out_energy.txt'
     ! Output_log
     character(len=29)       :: out_log          = './input_output/log.txt'
 end module constant

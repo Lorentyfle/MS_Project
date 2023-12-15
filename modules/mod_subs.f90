@@ -17,13 +17,16 @@ contains
     ! 15/11/2023 : correction of load_input_last() to count the number of species at the last line.
     ! 17/11/2023 : Addition of the functions to compute and find inside a matrix the values of sigma and epsilon in function of the dimers
     ! Coded by T.Jamin.
+    !
     subroutine load_input()
         ! This subroutine will read the specific input file and put the variables into global variable 
         ! through mod_cst.f90
+        !
         ! ***********
         ! * Modules *
         ! ***********
-        use constant, only : Temperature,Higher_size_name
+        !
+        use constant, only : Temperature, Higher_size_name
         use constant, only : Name, sigma, epsilon_, Proportion
         use constant, only : N_part, density, Box_dimension
         use constant, only : dr, Restart, simulation_time, Freq_write
@@ -31,18 +34,21 @@ contains
         use constant, only : input_fort
         use mod_function, only : StripSpaces!,sort_decreasing
         use position, only : Label
+        !
         implicit none
+        !
         ! ***************
         ! * Declaration *
         ! ***************
+        !
         character(len=1)        :: target_comment = "#"
         character(len=12)       :: targetList(13)
         character(len=132)      :: line, tmp
         double precision        :: numerical_tmp
         logical                 :: good_line, done, multi_data_verif
-        integer                 :: i, j,stat,k, integer_tmp
+        integer                 :: i, j, stat, k, integer_tmp
         integer                 :: nlines, input_lines, dimension_lattice
-        integer,dimension(:),allocatable :: biggest_name
+        integer, dimension(:), allocatable :: biggest_name
         !
         ! Initialisation of the target list
         !
@@ -62,22 +68,22 @@ contains
         !
         dimension_lattice = 0
         !
-        !
-        ! **************
+        ! ***************
         ! Find the datas
-        ! **************
+        ! ***************
         !
         open(1,file=input_fort,position="rewind")
+        !
         ! ***********************
         ! Find number of species
-        ! **********************
+        ! ***********************
+        !
         nlines = 0
         tmp = ''
         done = .false.
         k = 0
         do while (.NOT. done)
             k = k + 1
-            !write(*,*) k
             read(1, fmt="(a)", iostat=stat) line
             if(stat<0)then
                 done = .true.
@@ -123,14 +129,15 @@ contains
         end do
         !
         rewind(1)
+        !
         ! ************
         ! Extract data
         ! ************
+        !
         done = .false.
         k = 0
         do while(.NOT. done)
             k = k + 1
-            !write(*,*) k
             read(1, fmt="(a)", iostat=stat) line
             if(stat<0)then
                 done = .true.
@@ -149,13 +156,6 @@ contains
                     if(line(i:i) == "=") then
                         multi_data_verif = .false.
                         dimension_lattice = 0
-                        !if ( density /= -1 .and. N_part /= -1 .and. &
-                        !Box_dimension(1) /= -1 .and. Box_dimension(2) /= -1 .and. Box_dimension(3) /= -1 ) then
-                        !    write(*,*) "Data overflow."
-                        !    write(*,*) "Please do not enter the dimension of the box, the density and &
-                        !    the number of particules at the same time."
-                        !    stop
-                        !end if
                         if(TRIM(line(1:i)) == TRIM(targetList(1))) then
                             tmp = TRIM(line(i+1:len(line)))
                             read(tmp,*) numerical_tmp
@@ -333,6 +333,7 @@ contains
         use constant, only : input_posit
         use position, only : identity_Label, coord
         use mod_function, only : StripSpaces
+        !
         implicit none
         !
         ! Here the input of the position will be made.
@@ -342,17 +343,18 @@ contains
         ! x, y and z will be double precision
         ! This function will only read the FIRST position
         !
-        logical, intent(in)     :: allocated_value ! Do we need to allocate the Label and coord?
+        logical, intent(in)     :: allocated_value ! Tell us : Do we need to allocate the Label and coord?
+        !
         character(len=1)        :: target_comment = "#"
         character(len=132)      :: line, tmp
         logical                 :: done, file_exists
         integer                 :: nlines, integer_tmp, integer_tmp2, stat
-        integer                 :: i,j,k, rank_data, dim_coord
+        integer                 :: i, j, k, rank_data, dim_coord
         double precision        :: numerical_tmp
         !
         ! ***********************
         ! Find number of species
-        ! **********************
+        ! ***********************
         !
         nlines = 0
         tmp = ''
@@ -416,7 +418,6 @@ contains
                         rank_data = rank_data + 1
                         tmp = TRIM(line(1:i-1))
                         call StripSpaces(tmp)
-                        !write(*,*) tmp
                         read(tmp, *) integer_tmp2
                         identity_Label(rank_data) = integer_tmp2
                         ! Here we will extract the x,y,z positions
@@ -429,7 +430,6 @@ contains
                                 tmp = TRIM(line(integer_tmp:j-1))
                                 call StripSpaces(tmp)
                                 read(tmp,*) numerical_tmp
-                                !write(*,*) tmp
                                 integer_tmp = j+1
                                 coord(rank_data, dim_coord) = numerical_tmp
                             end if
@@ -447,6 +447,7 @@ contains
         use constant, only : input_posit
         use position, only : identity_Label, coord
         use mod_function, only : StripSpaces
+        !
         implicit none
         !
         ! Here the input of the position will be made.
@@ -456,17 +457,18 @@ contains
         ! x, y and z will be double precision
         ! This function will only read the LAST position
         !
-        logical, intent(in)     :: allocated_value ! Do we need to allocate the Label and coord?
+        logical, intent(in)     :: allocated_value ! Tell us : Do we need to allocate the Label and coord?
+        !
         character(len=1)        :: target_comment = "#"
         character(len=132)      :: line, tmp
         logical                 :: done, file_exists
         integer                 :: nlines, nSTOP, integer_tmp, integer_tmp2, stat
-        integer                 :: i,j,k,k_stop, rank_data, dim_coord
+        integer                 :: i, j, k, k_stop, rank_data, dim_coord
         double precision        :: numerical_tmp
         !
         ! ***********************
         ! Find number of species
-        ! **********************
+        ! ***********************
         !
         nlines = 0
         tmp = ''
@@ -495,9 +497,11 @@ contains
             end do
         end do
         12  rewind(1)
-        ! We suppose that we CAN loose particules/atoms/molecules in our system.
+        !
+        ! We suppose that we CAN lose particules/atoms/molecules in our system.
         ! Like we can test multiple systems one after the other
         ! So we can take the first step to know the size of our matrix.
+        !
         k_stop = 0
         nlines = -1 ! To avoid having one line more
         do
@@ -568,7 +572,6 @@ contains
                         rank_data = rank_data + 1
                         tmp = TRIM(line(1:i-1))
                         call StripSpaces(tmp)
-                        !write(*,*) tmp, nSTOP
                         read(tmp,*) integer_tmp2
                         identity_Label(rank_data) = integer_tmp2
                         ! Here we will extract the x,y,z positions
@@ -581,7 +584,6 @@ contains
                                 tmp = TRIM(line(integer_tmp:j-1))
                                 call StripSpaces(tmp)
                                 read(tmp,*) numerical_tmp
-                                !write(*,*) tmp
                                 integer_tmp = j+1
                                 coord(rank_data, dim_coord) = numerical_tmp
                             end if
@@ -599,7 +601,9 @@ contains
         use mod_function, only : StripSpaces
         use constant, only : Number_of_species
         use constant, only : out_log
+        !
         implicit none
+        !
         double precision, dimension(Number_of_species), intent(out) ::  Previous_Energy
         integer, dimension(Number_of_species), intent(out) ::  Previous_step
         !
@@ -610,9 +614,9 @@ contains
         character(len=20)       :: target_new_sim = "---New_Simulation---"
         character(len=132)      :: line, tmp
         logical                 :: done, file_exists
-        integer                 :: new_data,number_new_sim,species_in_question
+        integer                 :: new_data, number_new_sim, species_in_question
         integer                 :: nlines, integer_tmp, stat
-        integer                 :: i,k_jump_line,skip_line,k_new_sim, rank_data,size_line
+        integer                 :: i, k_jump_line, skip_line, k_new_sim, rank_data, size_line
         double precision        :: numerical_tmp
         !
         ! ***********************
@@ -669,7 +673,6 @@ contains
             skip_line = 1
             ! Test for comments or blank lines
             do i=1, len(line)
-                !
                 if ( line(i:i) /= " ") then
                     if ( line(i:21) == "---New_Simulation---" ) then
                         k_new_sim = k_new_sim + 1
@@ -681,7 +684,6 @@ contains
                         k_jump_line = k_jump_line + 1
                         exit
                     end if
-                    !
                     size_line = size_line + 1
                     elseif (new_data == rank_data .and. size_line /= 0) then
                         new_data = new_data + 1
@@ -729,13 +731,14 @@ contains
         ! It will make in sort we will have an output even if the simulation has not ended.
         use constant, only : Restart
         use constant, only : out_energy
+        !
         implicit none
-        double precision, dimension(:),intent(in) :: Data_vector
-        logical,intent(in)      :: begining_sim
+        !
+        double precision, dimension(:), intent(in) :: Data_vector
+        logical, intent(in)     :: begining_sim
+        !
         logical                 :: file_exists
         integer                 :: i
-        !
-        !
         !
         inquire(file=out_energy, exist=file_exists)
         if (file_exists) then
@@ -743,7 +746,7 @@ contains
         else
             open(12, file=out_energy, status="new", action="write")
             write(12,*) "       Label               Simulation step                 <E_i>                   E_i"
-        end if                                              ! It's entirely possible that another subroutine will be done for it.
+        end if
         ! If we have a new simulation appended at the end, add this.
         if ( Restart /= 1 .and. file_exists .and. begining_sim) then
             write(12,*) "---New_Simulation---"
@@ -751,22 +754,21 @@ contains
         end if
         ! We now write the datas.
         write(12,*) Data_vector
-
     end subroutine write_output_energy_last
 
     subroutine write_output_log(cKQ,av_Energy_end,begining_sim)
         use position, only : Label
         use constant, only : out_log
+        !
         implicit none
+        !
         ! All the inputs needs to have the same dimensions!
-        double precision, dimension(:),intent(in)   :: av_Energy_end
-        integer,dimension(:),intent(in)             :: cKQ
-        logical,intent(in)                          :: begining_sim
+        double precision, dimension(:), intent(in)   :: av_Energy_end
+        integer, dimension(:), intent(in)            :: cKQ
+        logical, intent(in)                          :: begining_sim
         !
         logical                 :: file_exists
         integer                 :: i
-        !
-        !
         !
         inquire(file=out_log, exist=file_exists)
         if (file_exists) then
@@ -775,7 +777,7 @@ contains
             open(12, file=out_log, status="new", action="write")
             write(12,*) "---New_Simulation---"
             write(12,*) "Species        rank         <E_i>"
-        end if                                              ! It's entirely possible that another subroutine will be done for it.
+        end if
         ! If we have a new simulation appended at the end, add this.
         if ( begining_sim .and. file_exists ) then
             write(12,*) "---New_Simulation---"
@@ -785,18 +787,19 @@ contains
         do i = 1, size(av_Energy_end)
             write(12,*) Label(i),cKQ(i),av_Energy_end(i)
         end do
-        !
     end subroutine write_output_log
 
     subroutine write_input_position()
         ! This subroutine wil only take care of writing, watever the data. It will append it at the end of the input/output file.
         use position, only : identity_Label, coord
         use constant, only : input_posit
+        !
         implicit none
+        !
         logical                 :: file_exists
         integer                 :: i
         !
-        ! Verification that the file exist
+        ! Verification that the file exists
         inquire(file=input_posit, exist=file_exists)
         if (file_exists) then
             open(12, file=input_posit, status="old", position="append", action="write")
@@ -815,13 +818,14 @@ contains
 
     subroutine create_file(filename)
         implicit none
-        
+        !
         character(*), intent(in) :: filename
+        !
         integer                  :: unit=20
         integer                  :: ierr
-    
+        !
         open(unit,file=filename,status='unknown', action="write",iostat=ierr)
-        
+        !
         if ( ierr /=0 ) then
             write(*,*) "Error: Unable to create the file."
             stop
@@ -832,18 +836,23 @@ contains
         close(unit)
     end subroutine create_file
 
+    ! The next few modules are used to
     ! /!\ Verify if coord and identity label are allocated /!\
     ! coord_gen and random_atom will always be used first so will
-    ! allocate this values
+    ! allocate these values
+
     subroutine DNB(searchB)
         !
         ! ***********
         ! * Modules *
         ! ***********
+        !
         use constant, only : N_part, density, Box_dimension
         !
         implicit none
+        !
         logical, intent(in) :: searchB
+        !
         double precision    :: Volume=1.0d0
         integer             :: i
         !
@@ -862,7 +871,6 @@ contains
         else
             N_part = Volume*density
         end if
-        !
     end subroutine DNB
 
     subroutine Box_good(searchB)
@@ -870,10 +878,13 @@ contains
         ! ***********
         ! * Modules *
         ! ***********
+        !
         use constant, only : N_part, density, Box_dimension
         !
         implicit none
+        !
         logical, intent(out) :: searchB
+        !
         integer :: i
         double precision :: Do_we_have_box
         !
@@ -902,27 +913,29 @@ contains
                 stop
             end if
         end if
-
     end subroutine Box_good
 
     subroutine coord_gen()
         ! This subroutine will generate a grid depending on the values of the box dimension.
         ! If the value of the box is inferior to the maximum sigma, the program will stop.
+        !
         ! ***********
         ! * Modules *
         ! ***********
+        !
         use constant, only : Name, sigma, epsilon_, Proportion
         use constant, only : N_part, density, Box_dimension
         use constant, only : dr, Restart, simulation_time, Freq_write
         use constant, only : Number_of_species
         use position, only : identity_Label, coord
         use mod_function, only : sort_increasing, IS_ODD
+        !
         implicit none
-        
+        !
         double precision, dimension(3):: Organise_Box
-        integer :: n,m,l
-        integer :: N_inside,maximum_sigma,P
-        integer :: i,j,k
+        integer :: n, m, l
+        integer :: N_inside, maximum_sigma, P
+        integer :: i, j, k
         logical :: IS_ODD_loop
         ! We sort the values of the box
         call sort_increasing(Box_dimension,Organise_Box)
@@ -948,7 +961,6 @@ contains
             write(*,*) sigma(maximum_sigma)
             stop
         end if
-        !
         ! (n,m,l) is the number of "cubes" per side length.
         allocate(coord(N_inside,3))
         P = 0
@@ -967,43 +979,45 @@ contains
                 end do
             end do
         end do
-        !write(*,*) "n,l,m"
-        !write(*,*) n,l,m
-        !write(*,*) "Number of sites"
-        !write(*,*) N_inside
-        !write(*,*) "Small box dimensions"
-        !write(*,*) Organise_Box(1)/n, Organise_Box(2)/m,Organise_Box(3)/l
-        !write(*,*) "Total dimension"
-        !do j = 1, size(coord,1)
-        !    write(*,*) (coord(j,i), i=1, size(coord,2))
-        !end do
-        !stop
+        ! If you want to see what's happened, uncomment below
+        ! write(*,*) "n,l,m"
+        ! write(*,*) n,l,m
+        ! write(*,*) "Number of sites"
+        ! write(*,*) N_inside
+        ! write(*,*) "Small box dimensions"
+        ! write(*,*) Organise_Box(1)/n, Organise_Box(2)/m,Organise_Box(3)/l
+        ! write(*,*) "Total dimension"
+        ! do j = 1, size(coord,1)
+        !     write(*,*) (coord(j,i), i=1, size(coord,2))
+        ! end do
     end subroutine coord_gen
 
     subroutine random_atom()
         ! This subroutine will put randomly one atom inside one position.
         ! It will create the identity_Label vector
+        !
         ! ***********
         ! * Modules *
         ! ***********
+        !
         use constant, only : Name, sigma, epsilon_, Proportion
         use constant, only : N_part, density, Box_dimension
         use constant, only : dr, Restart, simulation_time, Freq_write
         use constant, only : Number_of_species
         use position, only: identity_Label, coord, Label
+        !
         implicit none
-    
-        integer :: i,j
+        !
+        integer :: i, j
         integer :: N_cell
         integer :: Atom_Proportion=0
         double precision :: Rand
         double precision, dimension(:), allocatable :: N_particule_in_species
         integer, dimension(:), allocatable :: counter_N_particule_in_species
         double precision, dimension(:), allocatable :: weights, Proport
-        ! To do, change the names : Proportion to Numerator_Proportion
-
+        !
         N_cell = size(coord,1)
-
+        !
         allocate(weights(Number_of_species+1))
         allocate(N_particule_in_species(Number_of_species))
         allocate(counter_N_particule_in_species(Number_of_species+1))
@@ -1056,17 +1070,17 @@ contains
                 end if
             end do
         end do
-        ! Deallocations to do
+        ! To do : Deallocations
     end subroutine random_atom
 
     subroutine Debug_print()
         use constant, only : Temperature, Name, sigma, epsilon_, density, Box_dimension, N_part, Proportion
-        use constant, only : dr,Restart, simulation_time, Number_of_species, Freq_write,displacement
+        use constant, only : dr, Restart, simulation_time, Number_of_species, Freq_write, displacement
         use position, only : Label, coord, identity_Label
-        use mod_function, only : arithmetic_mean, geometric_mean,sort_increasing
+        use mod_function, only : arithmetic_mean, geometric_mean, sort_increasing
         !
         implicit none
-        integer     :: i,j
+        integer     :: i, j
         !
         write(*,*) "Here is the entirety of the input entered:"
         write(*,*) "T =", Temperature
@@ -1086,26 +1100,29 @@ contains
     subroutine dr_verif()
         use constant, only : dr, Box_dimension
         use mod_function, only : sort_increasing
-        
+        !
         implicit none
+        !
         double precision, dimension(3) :: Min_Box_dim
-
+        !
         Min_Box_dim = Box_dimension/2.0d0
-
+        !
         call sort_increasing(Min_Box_dim, Min_Box_dim)
-
+        !
         if ( dr > Min_Box_dim(1) ) then
-            write(*,*) "Cut off too big, the lower one is taken."
+            write(*,*) "Cutoff too big, the lower one is taken."
             write(*,*) Min_Box_dim(1)
             dr = Min_Box_dim(1)
         end if
     end subroutine dr_verif
 
     subroutine verif_DNB()
-        use constant, only : Box_dimension,density,N_part        
+        use constant, only : Box_dimension, density, N_part
+        !
         implicit none
         !
         integer     :: missing
+        !
         missing = 0
         if ( density == -1) then
             missing = missing + 1
@@ -1117,7 +1134,7 @@ contains
             missing = missing + 1
         end if 
         if ( missing == 2 ) then
-            write(*,*) "We need at least two parameters"
+            write(*,*) "We need at least two parameters."
             stop
         elseif ( missing == 3 ) then
             write(*,*) "No parameters detected. Check if the input is being read?"
@@ -1134,6 +1151,7 @@ contains
         use mod_function, only : sort_increasing
         !
         implicit none
+        !
         double precision, dimension(:), allocatable :: Min_sigma_dim
         !
         allocate(Min_sigma_dim(Number_of_species))
@@ -1152,7 +1170,9 @@ contains
     subroutine random_select(atom, index)
         use constant, only : N_part
         use position, only : coord, identity_Label
+        !
         implicit none
+        !
         double precision, dimension(3), intent(out) :: atom
         integer, intent(out) :: index
         !
@@ -1167,15 +1187,17 @@ contains
     end subroutine random_select
 
     subroutine random_displace(atom_in,index_in,atom_out)
-        use constant, only : Number_of_species, sigma,Box_dimension,displacement
-        use position, only : coord,identity_Label
+        use constant, only : Number_of_species, sigma, Box_dimension, displacement
+        use position, only : coord, identity_Label
+        !
         implicit none
+        !
         double precision, dimension(3), intent(in)  :: atom_in
         integer,intent(in)                          :: index_in
         double precision, dimension(3), intent(out) :: atom_out
         !
         double precision, dimension(3) :: Rand, sign
-        integer :: i,j
+        integer :: i, j
         !
         do i = 1, 3
             call random_number(Rand(i))
@@ -1188,7 +1210,7 @@ contains
         do i = 1, 3
             ! We move the atom
             atom_out(i) = atom_in(i) + displacement * Rand(i)
-            ! We apply PBC
+            ! We apply periodic boundary conditions
             if ( atom_out(i) > Box_dimension(i) ) then
                 atom_out(i) = atom_out(i) - Box_dimension(i)
             elseif (atom_out(i) < 0.0d0) then
@@ -1200,14 +1222,15 @@ contains
     subroutine sigma_epsilon_dimers()
         ! This subroutine will automatically allocate a matrix containing the interactions between dimers.
         use position, only : Label, dimers_interact
-        use constant, only : Number_of_species,epsilon_,sigma
-        use mod_function, only : arithmetic_mean, geometric_mean 
+        use constant, only : Number_of_species, epsilon_, sigma
+        use mod_function, only : arithmetic_mean, geometric_mean
+        !
         implicit none
         !
         double precision, dimension(2) :: epsilons, sigmas
         !
         integer :: Number_pairs
-        integer :: i,j,k
+        integer :: i, j, k
         !
         k = 0
         Number_pairs = Number_of_species * (Number_of_species - 1)/2 + Number_of_species
@@ -1233,12 +1256,14 @@ contains
         ! Function that will output the exact value of epsilon and sigma of the dimer entered.
         use position, only : Label, dimers_interact
         use constant, only : Number_of_species
+        !
         implicit none
-
-        integer, intent(in) :: dimer1,dimer2
+        !
+        integer, intent(in) :: dimer1, dimer2
         double precision, intent(out) :: epsilon_dimer, sigma_dimer
-        integer             :: n,m, index_dimer
-
+        !
+        integer             :: n, m, index_dimer
+        !
         ! Verification to avoid the breaking of the indexing function
         if ( dimer1 <= dimer2 ) then
             n = dimer1
@@ -1247,28 +1272,29 @@ contains
             n = dimer2
             m = dimer1
         end if
-    
+        !
         index_dimer = (n-1)*Number_of_species &
         - (n-1)*(n-2)/2 + m + 1 - n
-        
+        !
         epsilon_dimer = dimers_interact(index_dimer,1)
         sigma_dimer   = dimers_interact(index_dimer,2)
     end subroutine pick_dimers_data
 
     subroutine minimum_image(atom, index, distances)
         use position, only : coord
-        use constant, only : N_part,Box_dimension,dr
+        use constant, only : N_part, Box_dimension, dr
         ! /!\ Verify if the Box dimension is well fitted.
         use mod_function, only : dij
-
+        !
         implicit none
+        !
         integer, intent(in) :: index
         double precision, dimension(3), intent(in) :: atom
         double precision, dimension(N_part), intent(out) :: distances
-
+        !
         double precision, dimension(3) :: neighbor
         integer :: i, j
-
+        !
         do i = 1, N_part
             do j = 1, 3
                 neighbor(j) = coord(i, j)
@@ -1276,20 +1302,21 @@ contains
             if ( .NOT. i == index ) then
                 distances(i) = dij(neighbor, atom, Box_dimension)
             else
-                distances(i) = dr * 2
+                distances(i) = dr * 2   ! if the atom is itself, assign it a dummy value beyond the cutoff to avoid self-interaction
             end if
         end do
-
     end subroutine minimum_image
 
     subroutine Metropolis(Delta_E, accept)
         use constant, only : Temperature, boltzmann
+        !
         implicit none
+        !
         double precision, intent(in) :: Delta_E
         logical, intent(out) :: accept
-
+        !
         double precision :: probability, Rand, beta
-
+        !
         if (Delta_E < 0) then
             accept = .TRUE.
         else
@@ -1302,24 +1329,23 @@ contains
                 accept = .FALSE.
             end if
         end if 
-
     end subroutine Metropolis
 
     subroutine energy(index, distances, Epot)
-
         use constant, only : dr, N_part
         use position, only : identity_Label
         use mod_function, only : Lennard_Jones
-
+        !
         implicit none
+        !
         double precision, dimension(N_part), intent(in) :: distances
         integer, intent(in) :: index
         double precision, intent(out) :: Epot
-
+        !
         double precision, dimension(2) :: LJ_params
         double precision :: Edimer
         integer :: i
-        
+        !
         Epot = 0
         do i = 1, N_part
             if ( distances(i) < dr .and. distances(i) > 0.0d0 ) then
@@ -1330,29 +1356,31 @@ contains
             end if
             Epot = Epot + Edimer
         end do
-
     end subroutine energy
 
     subroutine write_matrix(matrix)
         ! Function that will print matrices in double precision
         ! Only 2D matrices are taken
         implicit none
+        !
         double precision,dimension(:,:), intent(in) :: matrix
-        integer :: i,j
+        !
+        integer :: i, j
         !
         do i = 1, size(matrix,1)
             write(*,*) (matrix(i,j), j=1, size(matrix,2))
         end do
-        !
     end subroutine write_matrix
 
-    subroutine PBC()
+    subroutine PBC()    
+        ! Periodic Boundary Conditions for simulating a bulk
+        ! This subroutine is not actually used, but we keep it to show how PBC works
         use position, only : coord, identity_Label
         use constant, only : Box_dimension
         !
         implicit none
         !
-        integer     :: i,j
+        integer     :: i, j
         !
         do i = 1, size(coord,1)
             do j = 1, size(coord,2)

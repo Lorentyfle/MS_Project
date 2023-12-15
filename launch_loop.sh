@@ -1,7 +1,7 @@
 #!/bin/bash
 
 loop=1
-number_rdf=200
+number_rdf=1000
 
 while [ $loop -lt $number_rdf ]
 do
